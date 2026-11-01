@@ -140,7 +140,7 @@ function dibujarPedidos() {
     const sig = SIGUIENTE[p.estado];
     const puedeCancelar = p.estado !== 'entregado' && p.estado !== 'cancelado';
     return `
-    <article class="pedido ${p.estado}">
+    <article class="pedido ${p.estado}" data-ped="${p.id}">
       <div class="ped-cab">
         <h3>#${p.id} · ${esc(p.cliente)}</h3>
         <div>
@@ -156,6 +156,7 @@ function dibujarPedidos() {
       <div class="ped-pie">
         <span class="ped-total">${fmt.format(p.total)}</span>
         <div class="ped-acc">
+          ${p.conversacion_id ? `<button class="btn chico" data-conv-ver="${esc(p.conversacion_id)}">💬 Ver conversación</button>` : ''}
           ${p.estado === 'listo' ? `<a class="btn chico wa" href="${linkWhatsApp(p)}" target="_blank" rel="noopener">Avisar por WhatsApp</a>` : ''}
           ${sig ? `<button class="btn primario chico" data-pedido="${p.id}" data-nuevo="${sig.estado}">${sig.texto}</button>` : ''}
           ${puedeCancelar ? `<button class="btn peligro chico" data-pedido="${p.id}" data-nuevo="cancelado">Cancelar</button>` : ''}
@@ -190,6 +191,8 @@ $('#filtros-estado').addEventListener('click', async (ev) => {
 });
 
 $('#lista-pedidos').addEventListener('click', async (ev) => {
+  const v = ev.target.closest('[data-conv-ver]');
+  if (v) { irAConversacion(v.dataset.convVer); return; }
   const b = ev.target.closest('[data-pedido]');
   if (!b) return;
   const id = Number(b.dataset.pedido);
@@ -296,11 +299,11 @@ function dibujarConversaciones() {
         <div class="conv-tit">“${esc(c.resumen)}”</div>
         <div class="conv-meta">
           ${hace(c.actualizado)} · ${c.cantidad_mensajes} mensajes
-          ${c.pedido_id ? `<span class="pill listo">Pedido #${c.pedido_id}</span>` : `<span class="pill entregado">Sin pedido</span>`}
+          ${c.pedido_id ? `<button type="button" class="pill listo enlace" data-ver-pedido="${c.pedido_id}">Pedido #${c.pedido_id} →</button>` : `<span class="pill entregado">Sin pedido</span>`}
         </div>
       </summary>
       <div class="conv-chat">
-        ${c.mensajes.map((m) => `<div class="cm ${m.role === 'user' ? 'cli' : 'bot'}">${esc(m.content).replace(/\*\*/g, '').replace(/\n/g, '<br>')}</div>`).join('')}
+        ${c.mensajes.map((m) => `<div class="cm ${m.role === 'user' ? 'cli' : 'bot'}">${esc(m.content).replace(/\*\*/g, '').replace(/\n/g, '<br>')}${m.lista && m.lista.length ? `<div class="cm-lista">🛒 Lista propuesta: ${m.lista.map((l) => `${l.cantidad} × ${esc(l.nombre)}`).join(' · ')}</div>` : ''}</div>`).join('')}
         ${herr.length ? `<div class="conv-herr">${herr.map((h) => `<span class="pill herr">${HERRAMIENTA[h] || esc(h)}</span>`).join(' ')}</div>` : ''}
       </div>
     </details>`;
@@ -322,22 +325,104 @@ $('#lista-conv').addEventListener('toggle', (ev) => {
   if (d.open) convAbiertas.add(d.dataset.conv); else convAbiertas.delete(d.dataset.conv);
 }, true);
 
+$('#lista-conv').addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-ver-pedido]');
+  if (!b) return;
+  ev.preventDefault();
+  irAPedido(Number(b.dataset.verPedido));
+});
+
+async function cambiarTab(nombre) {
+  tabActual = nombre;
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('activo', t.dataset.tab === nombre));
+  for (const n of ['pedidos', 'inventario', 'estadisticas', 'conversaciones']) $('#tab-' + n).hidden = n !== nombre;
+  try {
+    if (nombre === 'inventario') await cargarInventario();
+    else if (nombre === 'conversaciones') await cargarConversaciones();
+    else if (nombre === 'estadisticas') await cargarEstadisticas();
+    else await cargarPedidos();
+  } catch (e) { aviso(e.message); }
+}
+
+async function irAConversacion(id) {
+  convAbiertas.add(id);
+  await cambiarTab('conversaciones');
+  const d = document.querySelector(`details[data-conv="${CSS.escape(id)}"]`);
+  if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'center' }); d.classList.add('resaltado'); setTimeout(() => d.classList.remove('resaltado'), 2200); }
+  else aviso('Esa conversación ya no está en la lista reciente.');
+}
+
+async function irAPedido(id) {
+  filtroEstado = '';
+  dibujarFiltros();
+  await cambiarTab('pedidos');
+  const el = document.querySelector(`[data-ped="${id}"]`);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('resaltado'); setTimeout(() => el.classList.remove('resaltado'), 2200); }
+}
+
+/* ---------- Estadísticas ---------- */
+const compacto = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1).replace('.0', '') + ' M' : n >= 1e3 ? Math.round(n / 1e3) + ' k' : String(n));
+const NOMBRE_ORIGEN = { web: 'Tienda web', asistente: 'Asistente IA' };
+
+function dibujarEstadisticas(e) {
+  const maxV = Math.max(...e.serie.map((d) => d.ventas), 1);
+  const totalSerie = e.serie.reduce((t, d) => t + d.ventas, 0);
+  const pedSerie = e.serie.reduce((t, d) => t + d.pedidos, 0);
+  const dia = (iso) => { const [, m, d] = iso.split('-'); return `${d}/${m}`; };
+  const columnas = e.serie.map((d) => `
+    <div class="col" title="${dia(d.dia)}: ${fmt.format(d.ventas)} · ${d.pedidos} pedido${d.pedidos === 1 ? '' : 's'}">
+      <span class="val">${d.ventas ? compacto(d.ventas) : ''}</span>
+      <div class="barra" style="height:${Math.max(d.ventas ? 4 : 0, (d.ventas / maxV) * 100)}%"></div>
+      <span class="eje">${dia(d.dia)}</span>
+    </div>`).join('');
+
+  const maxU = Math.max(...e.top.map((t) => t.unidades), 1);
+  const filasTop = e.top.length
+    ? e.top.map((t) => `
+      <div class="fila-top" title="${esc(t.nombre)}: ${t.unidades} unidades · ${fmt.format(t.ingresos)}">
+        <span class="nom">${esc(t.nombre)}</span>
+        <span class="pista"><i style="width:${(t.unidades / maxU) * 100}%"></i></span>
+        <b>${t.unidades}</b>
+      </div>`).join('')
+    : '<div class="sin-datos">Todavía no hay ventas.</div>';
+
+  const totalOrig = e.origen.reduce((t, o) => t + o.ventas, 0) || 1;
+  const filasOrigen = e.origen.length
+    ? e.origen.map((o) => `
+      <div class="fila-top" title="${o.pedidos} pedidos · ${fmt.format(o.ventas)}">
+        <span class="nom">${esc(NOMBRE_ORIGEN[o.origen] || o.origen)}</span>
+        <span class="pista"><i style="width:${(o.ventas / totalOrig) * 100}%"></i></span>
+        <b>${Math.round((o.ventas / totalOrig) * 100)}%</b>
+      </div>
+      <div class="sub-fila">${o.pedidos} pedido${o.pedidos === 1 ? '' : 's'} · ${fmt.format(o.ventas)}</div>`).join('')
+    : '<div class="sin-datos">Todavía no hay ventas.</div>';
+
+  const conv = e.conversaciones;
+  const tasa = conv.total ? Math.round((conv.con_pedido / conv.total) * 100) : 0;
+  $('#stats').innerHTML = `
+    <div class="stats-kpis">
+      <div class="kpi"><div class="num">${fmt.format(totalSerie)}</div><div class="lbl">Ventas últimos ${e.serie.length} días · ${pedSerie} pedidos</div></div>
+      <div class="kpi"><div class="num">${fmt.format(e.ticket_promedio)}</div><div class="lbl">Ticket promedio</div></div>
+      <div class="kpi"><div class="num">${conv.total}</div><div class="lbl">Charlas con el asistente</div></div>
+      <div class="kpi"><div class="num">${tasa}%</div><div class="lbl">Charlas que terminaron en pedido (${conv.con_pedido})</div></div>
+    </div>
+    <div class="grafico"><h3>Ventas por día</h3><div class="barras">${columnas}</div></div>
+    <div class="dos-col">
+      <div class="grafico"><h3>Productos más pedidos <small>unidades</small></h3>${filasTop}</div>
+      <div class="grafico"><h3>Ventas por canal <small>% del total</small></h3>${filasOrigen}</div>
+    </div>`;
+}
+
+async function cargarEstadisticas() {
+  dibujarEstadisticas(await api('/api/admin/estadisticas?dias=14'));
+}
+
 $('#btn-actualizar-conv').addEventListener('click', () => cargarConversaciones().catch((e) => aviso(e.message)));
 
 /* ---------- Pestañas y refresco ---------- */
-document.querySelector('.tabs').addEventListener('click', async (ev) => {
+document.querySelector('.tabs').addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-tab]');
-  if (!b) return;
-  tabActual = b.dataset.tab;
-  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('activo', t === b));
-  $('#tab-pedidos').hidden = tabActual !== 'pedidos';
-  $('#tab-inventario').hidden = tabActual !== 'inventario';
-  $('#tab-conversaciones').hidden = tabActual !== 'conversaciones';
-  try {
-    if (tabActual === 'inventario') await cargarInventario();
-    else if (tabActual === 'conversaciones') await cargarConversaciones();
-    else await cargarPedidos();
-  } catch (e) { aviso(e.message); }
+  if (b) cambiarTab(b.dataset.tab);
 });
 
 async function refrescarTodo() {
@@ -357,6 +442,7 @@ async function refrescarPeriodico() {
     await Promise.all([cargarResumen(), cargarPedidos()]);
     await detectarNuevos();
     if (tabActual === 'conversaciones') await cargarConversaciones(true);
+    if (tabActual === 'estadisticas') await cargarEstadisticas();
   } catch { /* si falla una vez, se reintenta en el próximo ciclo */ }
 }
 

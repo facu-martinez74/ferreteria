@@ -68,12 +68,14 @@ function dibujarGrilla() {
     $('#grilla').innerHTML = `<div class="vacio">No encontramos nada con esa búsqueda. Probá con otras palabras.</div>`;
     return;
   }
-  $('#grilla').innerHTML = productos.map((p) => `
-    <article class="tarjeta">
+  const ordenados = [...productos].sort((x, y) => (y.stock > 0) - (x.stock > 0));
+  $('#grilla').innerHTML = ordenados.map((p) => `
+    <article class="tarjeta ${p.stock <= 0 ? 'agotado' : ''}">
       <div class="icono">${ICONOS[p.categoria] || '📦'}</div>
       <div class="marca">${esc(p.marca)}</div>
       <h3>${esc(p.nombre)}</h3>
       <p class="desc">${esc(p.descripcion)}</p>
+      ${p.usos ? `<p class="usos">Sirve para: ${esc(p.usos.split(',').slice(0, 3).join(', '))}</p>` : ''}
       <div class="precio">${fmt.format(p.precio)}</div>
       ${estadoStock(p)}
       <button class="btn primario" data-agregar="${p.id}" ${p.stock <= 0 ? 'disabled' : ''}>Agregar al pedido</button>
@@ -153,6 +155,25 @@ function dibujarCarrito() {
       </div>`).join('')
     : `<div class="carrito-vacio">Todavía no agregaste nada.<br>Buscá un producto y sumalo a tu pedido.</div>`;
 }
+
+// API que usa el asistente del chat para sumar productos al mismo pedido de la tienda.
+function agregarItems(items) {
+  let tope = 0;
+  for (const it of items || []) {
+    const id = Number(it.id);
+    const cant = Math.max(1, Math.floor(Number(it.cantidad)) || 1);
+    if (!Number.isInteger(id) || !(it.stock > 0)) continue;
+    const linea = carrito.find((l) => l.id === id);
+    const nueva = Math.min((linea ? linea.cantidad : 0) + cant, it.stock);
+    if (nueva < (linea ? linea.cantidad : 0) + cant) tope++;
+    if (linea) { linea.cantidad = nueva; linea.stock = it.stock; linea.precio = it.precio; }
+    else carrito.push({ id, nombre: it.nombre, precio: it.precio, cantidad: nueva, stock: it.stock });
+  }
+  guardarCarrito();
+  dibujarCarrito();
+  avisar(tope ? 'Agregado al pedido (algunas cantidades se ajustaron al stock).' : '✓ Agregado a tu pedido');
+}
+window.elClavo = { agregarItems, abrirCarrito: () => abrirPanel() };
 
 function abrirPanel() {
   $('#panel').classList.add('abierto');
@@ -243,6 +264,13 @@ $('#lineas').addEventListener('click', (ev) => {
 });
 
 $('#btn-carrito').addEventListener('click', abrirPanel);
+document.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Escape') return;
+  if (!$('#modal').hidden) cerrarModal(); else cerrarPanel();
+});
+document.querySelectorAll('[data-asistente]').forEach((b) => b.addEventListener('click', () => {
+  if (window.elClavoChat) window.elClavoChat.abrir(b.dataset.asistente === '1' ? '' : b.dataset.asistente);
+}));
 $('#cerrar-panel').addEventListener('click', cerrarPanel);
 $('#velo').addEventListener('click', cerrarPanel);
 $('#btn-confirmar').addEventListener('click', abrirModal);
@@ -251,7 +279,8 @@ $('#btn-cerrar-exito').addEventListener('click', cerrarModal);
 $('#form-pedido').addEventListener('submit', enviarPedido);
 
 (async function iniciar() {
+  $('#grilla').innerHTML = '<div class="vacio">Cargando catálogo…</div>';
   dibujarCarrito();
-  await cargarCategorias();
+  try { await cargarCategorias(); } catch { /* sin chips, el catálogo igual carga */ }
   await cargarProductos();
 })();

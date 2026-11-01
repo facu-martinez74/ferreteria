@@ -37,6 +37,7 @@
     <nav class="tabs">
       <button class="tab activo" data-tab="pedidos">Pedidos <span id="badge-nuevos" class="badge-tab" hidden></span></button>
       <button class="tab" data-tab="inventario">Inventario <span id="badge-stock" class="badge-tab alerta" hidden></span></button>
+      <button class="tab" data-tab="estadisticas">Estadísticas</button>
       <button class="tab" data-tab="conversaciones">Conversaciones IA</button>
     </nav>
 
@@ -58,6 +59,10 @@
           <tbody id="cuerpo-inv"></tbody>
         </table>
       </div>
+    </section>
+
+    <section id="tab-estadisticas" hidden>
+      <div id="stats" class="stats"></div>
     </section>
 
     <section id="tab-conversaciones" hidden>

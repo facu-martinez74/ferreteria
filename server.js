@@ -1,12 +1,12 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   buscarProductos, listarCategorias, crearPedido, ErrorNegocio,
-  listarPedidos, cambiarEstadoPedido, resumenAdmin, actualizarProducto,
+  listarPedidos, cambiarEstadoPedido, resumenAdmin, actualizarProducto, estadisticas,
 } from './db.js';
 import { responder, asistenteDisponible } from './assistant.js';
 import { listarConversaciones } from './conversaciones.js';
@@ -33,10 +33,14 @@ function cargarEnv() {
 cargarEnv();
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ferreteria2026';
-if (!process.env.ADMIN_PASSWORD) {
-  console.warn('Aviso: usando la clave de admin por defecto. Definila con ADMIN_PASSWORD en el archivo .env.');
+// Sin ADMIN_PASSWORD no hay clave por defecto (el repo es público): se genera una al azar y se muestra en los logs.
+let ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  ADMIN_PASSWORD = randomBytes(6).toString('hex');
+  console.warn(`Aviso: falta ADMIN_PASSWORD en el .env. Clave temporal del panel: ${ADMIN_PASSWORD}`);
 }
+process.on('unhandledRejection', (e) => console.error('Promesa sin manejar:', e));
+process.on('uncaughtException', (e) => console.error('Excepción sin manejar:', e));
 
 const TIPOS = {
   '.html': 'text/html; charset=utf-8',
@@ -79,8 +83,11 @@ function leerJSON(req, limite = 100_000) {
 }
 
 /* ---------- Autenticacion del panel ---------- */
-function tokenAdmin() {
-  return createHmac('sha256', ADMIN_PASSWORD).update('ferreteria-admin-v1').digest('hex');
+const VIDA_TOKEN = 12 * 3600 * 1000; // la sesión del panel dura 12 horas
+const firmar = (exp) => createHmac('sha256', ADMIN_PASSWORD).update('ferreteria-admin-v2:' + exp).digest('hex');
+function nuevoToken() {
+  const exp = Date.now() + VIDA_TOKEN;
+  return `${exp}.${firmar(exp)}`;
 }
 
 function iguales(a, b) {
@@ -92,7 +99,9 @@ function iguales(a, b) {
 function esAdmin(req) {
   const h = req.headers.authorization || '';
   const t = h.startsWith('Bearer ') ? h.slice(7) : '';
-  return iguales(t, tokenAdmin());
+  const [exp, firma = ''] = t.split('.');
+  if (!/^\d{10,15}$/.test(exp || '') || Number(exp) < Date.now()) return false;
+  return iguales(firma, firmar(exp));
 }
 
 const intentos = new Map(); // ip -> { n, hasta }
@@ -102,26 +111,30 @@ function ipDe(req) {
   return partes[partes.length - 1].trim();
 }
 
-// Limite del chat: protege la API key compartida de abusos.
-const chatHits = new Map(); // ip -> [timestamps]
-const CHAT_MAX_POR_MIN = 30;
-function chatPermitido(ip) {
-  const ahora = Date.now();
-  const recientes = (chatHits.get(ip) || []).filter((t) => ahora - t < 60_000);
-  if (recientes.length >= CHAT_MAX_POR_MIN) {
-    chatHits.set(ip, recientes);
-    return false;
-  }
-  recientes.push(ahora);
-  chatHits.set(ip, recientes);
-  return true;
+// Limites: protegen la API key compartida y el stock de pedidos falsos.
+// Ventana deslizante por IP y clave; cada bucket guarda las marcas de tiempo recientes.
+function crearLimitador(max, ventanaMs) {
+  const hits = new Map();
+  const permitido = (clave) => {
+    const ahora = Date.now();
+    const recientes = (hits.get(clave) || []).filter((t) => ahora - t < ventanaMs);
+    if (recientes.length >= max) { hits.set(clave, recientes); return false; }
+    recientes.push(ahora);
+    hits.set(clave, recientes);
+    return true;
+  };
+  setInterval(() => {
+    const ahora = Date.now();
+    for (const [k, ts] of hits) if (!ts.some((t) => ahora - t < ventanaMs)) hits.delete(k);
+  }, 5 * 60_000).unref();
+  return permitido;
 }
-setInterval(() => {
-  const ahora = Date.now();
-  for (const [ip, ts] of chatHits) {
-    if (!ts.some((t) => ahora - t < 60_000)) chatHits.delete(ip);
-  }
-}, 5 * 60_000).unref();
+const num = (v, def) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : def);
+const chatPorMinuto = crearLimitador(num(process.env.CHAT_MAX_POR_MIN, 12), 60_000);
+const chatPorDia = crearLimitador(num(process.env.CHAT_MAX_POR_DIA, 200), 24 * 3600_000);
+const chatGlobalPorHora = crearLimitador(num(process.env.CHAT_MAX_GLOBAL_HORA, 1200), 3600_000);
+const pedidosPorIp = crearLimitador(num(process.env.PEDIDOS_MAX_10MIN, 8), 10 * 60_000);
+const adminPorMin = crearLimitador(120, 60_000);
 
 /* ---------- API ---------- */
 async function api(req, res, url) {
@@ -145,16 +158,40 @@ async function api(req, res, url) {
     return json(res, 200, { disponible: asistenteDisponible() });
   }
   if (pathname === '/api/chat' && metodo === 'POST') {
-    if (!chatPermitido(ipDe(req))) {
+    const ip = ipDe(req);
+    if (!chatPorMinuto(ip)) {
       return json(res, 429, { error: 'Estás escribiendo muy rápido. Esperá unos segundos y probá de nuevo.' });
     }
-    const cuerpo = await leerJSON(req, 40_000);
-    const resultado = await responder({ mensajes: cuerpo.mensajes, sessionId: cuerpo.sessionId });
-    return json(res, 200, resultado);
+    if (!chatPorDia(ip) || !chatGlobalPorHora('global')) {
+      return json(res, 429, { error: 'El asistente llegó a su límite de consultas por ahora. Probá más tarde o armá tu pedido desde el catálogo.' });
+    }
+    const cuerpo = await leerJSON(req, 60_000);
+    // Respuesta en líneas JSON: primero avisos de progreso ("Buscando…") y al final el resultado.
+    res.writeHead(200, {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Accel-Buffering': 'no',
+    });
+    const enviar = (o) => { if (!res.writableEnded) res.write(JSON.stringify(o) + '\n'); };
+    try {
+      const r = await responder({
+        mensajes: cuerpo.mensajes,
+        sessionId: cuerpo.sessionId,
+        onEstado: (texto) => enviar({ tipo: 'estado', texto }),
+      });
+      enviar({ tipo: 'fin', ...r });
+    } catch (e) {
+      if (!(e instanceof ErrorNegocio)) console.error(e);
+      enviar({ tipo: 'error', status: e.status || 500, error: e instanceof ErrorNegocio ? e.message : 'El asistente tuvo un problema. Probá de nuevo.' });
+    }
+    return res.end();
   }
   if (pathname === '/api/pedidos' && metodo === 'POST') {
+    if (!pedidosPorIp(ipDe(req))) {
+      return json(res, 429, { error: 'Hiciste varios pedidos seguidos. Esperá unos minutos o llamanos al local.' });
+    }
     const cuerpo = await leerJSON(req);
-    const pedido = crearPedido({ ...cuerpo, origen: 'web' });
+    const pedido = crearPedido({ cliente: cuerpo.cliente, telefono: cuerpo.telefono, notas: cuerpo.notas, items: cuerpo.items, origen: 'web' });
     return json(res, 201, pedido);
   }
 
@@ -172,14 +209,18 @@ async function api(req, res, url) {
       return json(res, 401, { error: 'Clave incorrecta.' });
     }
     intentos.delete(ip);
-    return json(res, 200, { token: tokenAdmin() });
+    return json(res, 200, { token: nuevoToken() });
   }
 
   if (pathname.startsWith('/api/admin/')) {
     if (!esAdmin(req)) return json(res, 401, { error: 'No autorizado.' });
+    if (!adminPorMin(ipDe(req))) return json(res, 429, { error: 'Demasiadas consultas. Esperá un momento.' });
 
     if (pathname === '/api/admin/resumen' && metodo === 'GET') {
       return json(res, 200, resumenAdmin());
+    }
+    if (pathname === '/api/admin/estadisticas' && metodo === 'GET') {
+      return json(res, 200, estadisticas(Number(url.searchParams.get('dias')) || 14));
     }
     if (pathname === '/api/admin/conversaciones' && metodo === 'GET') {
       return json(res, 200, listarConversaciones(100));
@@ -206,17 +247,23 @@ async function api(req, res, url) {
 
 const server = http.createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'same-origin');
+    res.setHeader('Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
 
     if (url.pathname.startsWith('/api/')) {
       return await api(req, res, url);
     }
 
-    let ruta = decodeURIComponent(url.pathname);
+    let ruta;
+    try { ruta = decodeURIComponent(url.pathname); } catch { res.writeHead(400); return res.end('Solicitud inválida'); }
     if (ruta === '/') ruta = '/index.html';
     if (ruta === '/admin' || ruta === '/admin/') ruta = '/admin.html';
     const archivo = path.normalize(path.join(PUBLIC, ruta));
-    if (!archivo.startsWith(PUBLIC)) {
+    if (archivo !== PUBLIC && !archivo.startsWith(PUBLIC + path.sep)) {
       res.writeHead(403);
       return res.end('Prohibido');
     }
@@ -227,6 +274,7 @@ const server = http.createServer(async (req, res) => {
     });
     res.end(data);
   } catch (e) {
+    if (res.headersSent) return res.end();
     if (e instanceof ErrorNegocio) return json(res, e.status, { error: e.message });
     if (e.code === 'ENOENT' || e.code === 'EISDIR') {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -237,4 +285,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.keepAliveTimeout = 65_000;
 server.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));

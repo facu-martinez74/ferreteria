@@ -84,3 +84,27 @@
 .cm.bot { background: #fff; border: 1px solid var(--borde); justify-self: start; border-bottom-left-radius: 4px; }
 .conv-herr { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
 .pill.herr { background: #eef2ff; color: #3730a3; }
+
+.resaltado { outline: 3px solid var(--amarillo-osc); outline-offset: 2px; transition: outline-color .3s; }
+.pill.enlace { border: 0; cursor: pointer; font: inherit; font-size: .75rem; font-weight: 700; }
+.cm-lista { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--borde); font-size: .82rem; color: var(--gris); }
+
+.stats { display: grid; gap: 14px; padding-bottom: 60px; }
+.stats-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.grafico { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 16px; }
+.grafico h3 { margin: 0 0 14px; font-size: 1rem; }
+.grafico h3 small { color: var(--gris); font-weight: 500; margin-left: 6px; }
+.dos-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.barras { display: flex; align-items: stretch; gap: 6px; height: 210px; padding-top: 18px; }
+.col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; cursor: default; }
+.col .barra { width: 100%; max-width: 38px; background: #ca8a04; border-radius: 4px 4px 0 0; min-height: 0; transition: filter .15s; }
+.col:hover .barra { filter: brightness(1.12); }
+.col .val { font-size: .68rem; color: var(--negro); font-weight: 700; margin-bottom: 3px; white-space: nowrap; }
+.col .eje { font-size: .66rem; color: var(--gris); margin-top: 6px; white-space: nowrap; }
+.fila-top { display: grid; grid-template-columns: minmax(90px, 40%) 1fr auto; gap: 10px; align-items: center; padding: 5px 0; font-size: .88rem; }
+.fila-top .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fila-top .pista { background: #f3f4f6; border-radius: 4px; height: 12px; overflow: hidden; }
+.fila-top .pista i { display: block; height: 100%; background: #ca8a04; border-radius: 4px; }
+.fila-top b { min-width: 2.2em; text-align: right; }
+.sub-fila { color: var(--gris); font-size: .8rem; margin: -2px 0 8px; }
+@media (max-width: 600px) { .col .val { font-size: .58rem; } .col .eje:nth-child(odd) { visibility: hidden; } .tabs { overflow-x: auto; } .tab { white-space: nowrap; } }

@@ -51,6 +51,16 @@ db.exec(`
   );
 `);
 
+// Migración liviana: pedidos.conversacion_id (vínculo pedido <-> charla con el asistente)
+try {
+  const cols = db.prepare('PRAGMA table_info(pedidos)').all().map((c) => c.name);
+  if (!cols.includes('conversacion_id')) db.exec('ALTER TABLE pedidos ADD COLUMN conversacion_id TEXT');
+} catch (e) {
+  console.error('Migración pedidos.conversacion_id falló:', e);
+}
+db.exec('CREATE INDEX IF NOT EXISTS idx_pedidos_creado ON pedidos(creado)');
+db.exec('CREATE INDEX IF NOT EXISTS idx_items_pedido ON pedido_items(pedido_id)');
+
 export function normalizar(s = '') {
   return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 }
@@ -164,10 +174,11 @@ export function listarCategorias() {
 
 // Crea un pedido validando stock real y descontandolo en una sola transaccion.
 // Lo usan tanto la web como (mas adelante) el asistente de IA.
-export function crearPedido({ cliente, telefono, notas = '', items, origen = 'web' }) {
+export function crearPedido({ cliente, telefono, notas = '', items, origen = 'web', conversacionId = null }) {
   cliente = String(cliente || '').trim().slice(0, 80);
   telefono = String(telefono || '').trim().slice(0, 40);
   notas = String(notas || '').trim().slice(0, 500);
+  conversacionId = typeof conversacionId === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(conversacionId) ? conversacionId : null;
   if (cliente.length < 2) throw new ErrorNegocio('Ingresa tu nombre.');
   if (telefono.replace(/\D/g, '').length < 6) throw new ErrorNegocio('Ingresa un telefono valido.');
   if (!Array.isArray(items) || items.length === 0) throw new ErrorNegocio('El pedido esta vacio.');
@@ -202,8 +213,8 @@ export function crearPedido({ cliente, telefono, notas = '', items, origen = 'we
     }
 
     const res = db.prepare(
-      'INSERT INTO pedidos (cliente, telefono, notas, total, estado, origen, creado) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(cliente, telefono, notas, total, 'nuevo', origen, new Date().toISOString());
+      'INSERT INTO pedidos (cliente, telefono, notas, total, estado, origen, creado, conversacion_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(cliente, telefono, notas, total, 'nuevo', origen, new Date().toISOString(), conversacionId);
     const pedidoId = Number(res.lastInsertRowid);
 
     const insItem = db.prepare(
@@ -296,4 +307,40 @@ export function actualizarProducto(id, cambios = {}) {
   const r = db.prepare(`UPDATE productos SET ${campos.join(', ')} WHERE id = ?`).run(...valores, id);
   if (r.changes === 0) throw new ErrorNegocio('El producto no existe.', 404);
   return obtenerProducto(id);
+}
+
+/* ---------------- Estadisticas del panel ---------------- */
+
+// Fechas en hora argentina (UTC-3). Los pedidos cancelados no cuentan como venta.
+export function estadisticas(dias = 14) {
+  dias = Math.min(Math.max(Number(dias) || 14, 1), 90);
+  const filas = db.prepare(`
+    SELECT date(creado, '-3 hours') AS dia, COUNT(*) AS pedidos, SUM(total) AS ventas
+    FROM pedidos WHERE estado != 'cancelado' AND date(creado, '-3 hours') >= date('now', '-3 hours', ?)
+    GROUP BY dia`).all(`-${dias - 1} days`);
+  const porDia = new Map(filas.map((f) => [f.dia, f]));
+  const serie = [];
+  const hoy = new Date(Date.now() - 3 * 3600 * 1000);
+  for (let i = dias - 1; i >= 0; i--) {
+    const d = new Date(hoy.getTime() - i * 86400000).toISOString().slice(0, 10);
+    const f = porDia.get(d);
+    serie.push({ dia: d, pedidos: Number(f?.pedidos || 0), ventas: Number(f?.ventas || 0) });
+  }
+  const top = db.prepare(`
+    SELECT i.nombre, SUM(i.cantidad) AS unidades, SUM(i.cantidad * i.precio) AS ingresos
+    FROM pedido_items i JOIN pedidos p ON p.id = i.pedido_id
+    WHERE p.estado != 'cancelado' GROUP BY i.producto_id, i.nombre
+    ORDER BY unidades DESC, ingresos DESC LIMIT 8`).all()
+    .map((r) => ({ nombre: r.nombre, unidades: Number(r.unidades), ingresos: Number(r.ingresos) }));
+  const origen = db.prepare(`
+    SELECT origen, COUNT(*) AS pedidos, SUM(total) AS ventas
+    FROM pedidos WHERE estado != 'cancelado' GROUP BY origen`).all()
+    .map((r) => ({ origen: r.origen, pedidos: Number(r.pedidos), ventas: Number(r.ventas || 0) }));
+  let conv = { total: 0, con_pedido: 0 };
+  try {
+    const c = db.prepare('SELECT COUNT(*) AS total, SUM(CASE WHEN pedido_id IS NOT NULL THEN 1 ELSE 0 END) AS con_pedido FROM conversaciones').get();
+    conv = { total: Number(c.total || 0), con_pedido: Number(c.con_pedido || 0) };
+  } catch { /* la tabla conversaciones puede no existir todavia */ }
+  const ticket = db.prepare("SELECT AVG(total) AS t FROM pedidos WHERE estado != 'cancelado'").get().t;
+  return { serie, top, origen, conversaciones: conv, ticket_promedio: Math.round(Number(ticket || 0)) };
 }

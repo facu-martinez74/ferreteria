@@ -79,3 +79,18 @@ input, textarea { width: 100%; margin-top: 5px; padding: 11px 12px; border: 1px 
 #exito { text-align: center; }
 #exito p { color: var(--gris); }
 .check { width: 64px; height: 64px; border-radius: 50%; background: var(--verde); color: #fff; font-size: 2rem; display: grid; place-items: center; margin: 0 auto 10px; }
+
+.tarjeta .usos { margin: 0; color: #9a6b00; font-size: .78rem; }
+.tarjeta.agotado { opacity: .6; }
+.tarjeta .btn { margin-top: 4px; }
+.ia-cta { background: rgba(250, 204, 21, .1); border: 1px solid rgba(250, 204, 21, .45); border-radius: 16px; padding: 16px 18px; margin: 0 0 18px; max-width: 640px; }
+.ia-cab { display: flex; flex-direction: column; gap: 4px; }
+.ia-tag { align-self: flex-start; background: var(--amarillo); color: var(--negro); border-radius: 999px; padding: 2px 10px; font-size: .75rem; font-weight: 800; }
+.ia-cab strong { font-size: 1.1rem; }
+.ia-cta p { margin: 6px 0 12px; font-size: .9rem; }
+.ia-sugs { display: flex; flex-wrap: wrap; gap: 8px; }
+.ia-sugs button { background: #fff; color: var(--negro); border: 0; border-radius: 999px; padding: 9px 14px; font-weight: 700; font-size: .88rem; cursor: pointer; }
+.ia-sugs button:hover { background: var(--amarillo); }
+.ia-sugs button.otro { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4); }
+@media (max-width: 520px) { .btn-carrito span:nth-child(2) { display: none; } }
+:focus-visible { outline: 3px solid var(--amarillo-osc); outline-offset: 2px; }

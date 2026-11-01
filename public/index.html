@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ferretería El Clavo</title>
+  <title>Ferretería El Clavo · Pedí lo que necesitás, sin esperar</title>
+  <meta name="description" content="Catálogo con stock real y un asistente con IA que arma la lista de materiales de tu trabajo y deja el pedido listo para retirar.">
+  <meta name="theme-color" content="#111827">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -20,7 +23,17 @@
     <div class="wrap">
       <h1>Todo para tu obra, <em>sin esperar.</em></h1>
       <p>Buscá lo que necesitás, armá tu pedido y retiralo por el local.</p>
-      <input id="buscador" type="search" placeholder="Buscá por producto o por lo que querés hacer: &quot;colgar un cuadro&quot;, &quot;pintar&quot;…" autocomplete="off">
+      <div class="ia-cta">
+        <div class="ia-cab"><span class="ia-tag">🤖 Asistente con IA</span><strong>Contale tu trabajo y te armo la lista completa</strong></div>
+        <p>Herramientas, materiales, fijaciones y seguridad, con precios y stock real. Si querés, te dejo el pedido listo.</p>
+        <div class="ia-sugs">
+          <button type="button" data-asistente="Quiero colgar un estante en una pared de ladrillo">Colgar un estante</button>
+          <button type="button" data-asistente="Voy a pintar mi dormitorio, ¿qué necesito?">Pintar un ambiente</button>
+          <button type="button" data-asistente="Me pierde agua una canilla">Arreglar una canilla</button>
+          <button type="button" data-asistente="1" class="otro">Otro trabajo…</button>
+        </div>
+      </div>
+      <input id="buscador" type="search" aria-label="Buscar productos" placeholder="O buscá directo: &quot;taladro&quot;, &quot;pintura&quot;…" autocomplete="off">
     </div>
   </section>
 
