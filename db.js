@@ -221,3 +221,79 @@ export function crearPedido({ cliente, telefono, notas = '', items, origen = 'we
     throw e;
   }
 }
+
+/* ---------------- Panel de administracion ---------------- */
+
+export const ESTADOS = ['nuevo', 'preparando', 'listo', 'entregado', 'cancelado'];
+
+export function listarPedidos({ estado = '' } = {}) {
+  const pedidos = estado
+    ? db.prepare('SELECT * FROM pedidos WHERE estado = ? ORDER BY id DESC LIMIT 300').all(estado)
+    : db.prepare('SELECT * FROM pedidos ORDER BY id DESC LIMIT 300').all();
+  const itemsDe = db.prepare('SELECT producto_id, nombre, precio, cantidad FROM pedido_items WHERE pedido_id = ?');
+  return pedidos.map((p) => ({ ...p, items: itemsDe.all(p.id) }));
+}
+
+// Si se cancela un pedido, el stock vuelve al inventario. Un pedido cancelado no se reabre.
+export function cambiarEstadoPedido(id, estado) {
+  if (!ESTADOS.includes(estado)) throw new ErrorNegocio('Estado invalido.');
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const p = db.prepare('SELECT id, estado FROM pedidos WHERE id = ?').get(id);
+    if (!p) throw new ErrorNegocio('El pedido no existe.', 404);
+    if (p.estado !== estado) {
+      if (p.estado === 'cancelado') throw new ErrorNegocio('Un pedido cancelado no se puede reabrir.', 409);
+      if (estado === 'cancelado') {
+        const items = db.prepare('SELECT producto_id, cantidad FROM pedido_items WHERE pedido_id = ?').all(id);
+        const devuelve = db.prepare('UPDATE productos SET stock = stock + ? WHERE id = ?');
+        for (const it of items) devuelve.run(it.cantidad, it.producto_id);
+      }
+      db.prepare('UPDATE pedidos SET estado = ? WHERE id = ?').run(estado, id);
+    }
+    db.exec('COMMIT');
+    return { id, estado };
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+}
+
+export function resumenAdmin() {
+  const ped = db.prepare(`SELECT
+      COUNT(*) AS total_pedidos,
+      SUM(CASE WHEN estado = 'nuevo' THEN 1 ELSE 0 END) AS nuevos,
+      SUM(CASE WHEN estado IN ('nuevo', 'preparando', 'listo') THEN 1 ELSE 0 END) AS abiertos,
+      SUM(CASE WHEN estado != 'cancelado' THEN total ELSE 0 END) AS ventas
+    FROM pedidos`).get();
+  const stock = db.prepare(`SELECT
+      SUM(CASE WHEN stock = 0 THEN 1 ELSE 0 END) AS sin_stock,
+      SUM(CASE WHEN stock > 0 AND stock <= stock_minimo THEN 1 ELSE 0 END) AS bajo_stock,
+      COUNT(*) AS productos
+    FROM productos`).get();
+  return {
+    total_pedidos: Number(ped.total_pedidos || 0),
+    nuevos: Number(ped.nuevos || 0),
+    abiertos: Number(ped.abiertos || 0),
+    ventas: Number(ped.ventas || 0),
+    sin_stock: Number(stock.sin_stock || 0),
+    bajo_stock: Number(stock.bajo_stock || 0),
+    productos: Number(stock.productos || 0),
+  };
+}
+
+export function actualizarProducto(id, cambios = {}) {
+  const campos = [];
+  const valores = [];
+  for (const k of ['stock', 'precio', 'stock_minimo']) {
+    if (cambios[k] === undefined) continue;
+    const v = Number(cambios[k]);
+    if (!Number.isInteger(v) || v < 0 || v > 10_000_000) throw new ErrorNegocio(`Valor invalido para ${k}.`);
+    if (k === 'precio' && v < 1) throw new ErrorNegocio('El precio debe ser mayor a cero.');
+    campos.push(`${k} = ?`);
+    valores.push(v);
+  }
+  if (!campos.length) throw new ErrorNegocio('No hay cambios para guardar.');
+  const r = db.prepare(`UPDATE productos SET ${campos.join(', ')} WHERE id = ?`).run(...valores, id);
+  if (r.changes === 0) throw new ErrorNegocio('El producto no existe.', 404);
+  return obtenerProducto(id);
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Panel · Ferretería El Clavo</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-in">
+      <a class="logo" href="/admin">🔧 <span>El Clavo <b>· Panel del negocio</b></span></a>
+      <div class="top-acc">
+        <a class="link-tienda" href="/" target="_blank">Ver tienda ↗</a>
+        <button id="btn-salir" class="btn-salir" hidden>Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <section id="login" class="login">
+    <form id="form-login" class="login-caja">
+      <h1>Ingresá al panel</h1>
+      <p class="sub">Solo para el personal de la ferretería.</p>
+      <label>Clave
+        <input id="clave" type="password" autocomplete="current-password" required autofocus>
+      </label>
+      <p id="login-error" class="error" hidden></p>
+      <button class="btn primario" type="submit">Entrar</button>
+    </form>
+  </section>
+
+  <main id="app" class="wrap" hidden>
+    <div id="kpis" class="kpis"></div>
+
+    <nav class="tabs">
+      <button class="tab activo" data-tab="pedidos">Pedidos <span id="badge-nuevos" class="badge-tab" hidden></span></button>
+      <button class="tab" data-tab="inventario">Inventario <span id="badge-stock" class="badge-tab alerta" hidden></span></button>
+    </nav>
+
+    <section id="tab-pedidos">
+      <div id="filtros-estado" class="chips"></div>
+      <div id="lista-pedidos" class="pedidos"></div>
+    </section>
+
+    <section id="tab-inventario" hidden>
+      <div class="barra-inv">
+        <input id="buscar-inv" type="search" placeholder="Buscar producto…" autocomplete="off">
+        <label class="check"><input id="solo-bajo" type="checkbox"> Solo stock bajo o agotado</label>
+      </div>
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr><th>Producto</th><th>Estado</th><th>Stock</th><th>Mínimo</th><th>Precio</th></tr>
+          </thead>
+          <tbody id="cuerpo-inv"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>
