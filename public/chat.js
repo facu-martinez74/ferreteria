@@ -47,7 +47,8 @@
   .fc-grupo { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; background: #f9fafb; padding: 7px 12px; border-bottom: 1px solid #e5e7eb; }
   .fc-grupo.rec { border-top: 1px solid #e5e7eb; }
   .fc-it { display: grid; grid-template-columns: 34px 1fr auto; gap: 2px 10px; align-items: center; padding: 9px 12px; border-bottom: 1px solid #f1f5f9; }
-  .fc-it .ic { grid-row: 1 / 3; width: 34px; height: 34px; border-radius: 9px; background: #fef9c3; color: #92400e; display: grid; place-items: center; }
+  .fc-it .ic img { width: 100%; height: 100%; object-fit: cover; }
+  .fc-it .ic { grid-row: 1 / 3; width: 34px; height: 34px; border-radius: 9px; overflow: hidden; background: #fef9c3; color: #92400e; display: grid; place-items: center; }
   .fc-it .n { font-size: 13.5px; font-weight: 600; line-height: 1.25; color: #111827; }
   .fc-it .d { font-size: 12px; color: #6b7280; }
   .fc-it .d .poco { color: #b45309; font-weight: 600; }

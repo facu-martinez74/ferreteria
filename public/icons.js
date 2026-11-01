@@ -31,8 +31,25 @@
     for (const [re, ic] of REGLAS) if (re.test(n)) return ic;
     return CATEGORIA[p && p.categoria] || 'package';
   }
+  // Con foto: <img>; si no carga, el listener de abajo la reemplaza por el ícono.
+  function producto(p, tam) {
+    const ic = nombreIcono(p);
+    if (p && p.foto) {
+      return '<img class="foto-prod" src="' + String(p.foto).replace(/"/g, '') + '" alt="' + String(p.nombre || '').replace(/[<>"&]/g, '') + '" loading="lazy" data-ic="' + ic + '" data-t="' + (tam || 24) + '">';
+    }
+    return svg(ic, tam);
+  }
+  document.addEventListener('error', (ev) => {
+    const img = ev.target;
+    if (!img || img.tagName !== 'IMG' || !img.classList.contains('foto-prod')) return;
+    const caja = document.createElement('span');
+    caja.innerHTML = svg(img.dataset.ic, Number(img.dataset.t) || 24);
+    img.parentElement && img.parentElement.classList.remove('conFoto');
+    img.replaceWith(caja.firstChild);
+  }, true);
+
   window.iconos = {
-    producto: (p, tam) => svg(nombreIcono(p), tam),
+    producto,
     categoria: (c, tam) => svg(CATEGORIA[c] || 'package', tam),
   };
 })();

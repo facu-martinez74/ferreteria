@@ -71,7 +71,7 @@ function dibujarGrilla() {
   const ordenados = [...productos].sort((x, y) => (y.stock > 0) - (x.stock > 0));
   $('#grilla').innerHTML = ordenados.map((p) => `
     <article class="tarjeta ${p.stock <= 0 ? 'agotado' : ''}">
-      <div class="icono">${window.iconos.producto(p, 44)}</div>
+      <div class="icono ${p.foto ? 'conFoto' : ''}">${window.iconos.producto(p, 44)}</div>
       <div class="marca">${esc(p.marca)}</div>
       <h3>${esc(p.nombre)}</h3>
       <p class="desc">${esc(p.descripcion)}</p>

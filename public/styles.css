@@ -98,3 +98,6 @@ input, textarea { width: 100%; margin-top: 5px; padding: 11px 12px; border: 1px 
 .chip { display: inline-flex; align-items: center; gap: 6px; }
 .chip-ic { display: inline-flex; }
 .chip-ic svg { display: block; }
+
+.tarjeta .icono.conFoto { height: 150px; background: #fff; border: 1px solid var(--borde); overflow: hidden; padding: 0; }
+.tarjeta .icono img.foto-prod { width: 100%; height: 100%; object-fit: contain; display: block; }

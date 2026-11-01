@@ -10,6 +10,7 @@ import {
 } from './db.js';
 import { responder, asistenteDisponible } from './assistant.js';
 import { listarConversaciones } from './conversaciones.js';
+import { fotoDe } from './fotos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');
@@ -49,6 +50,7 @@ const TIPOS = {
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
 };
@@ -152,7 +154,7 @@ async function api(req, res, url) {
       q: url.searchParams.get('q') || '',
       categoria: url.searchParams.get('categoria') || '',
     });
-    return json(res, 200, productos);
+    return json(res, 200, productos.map((p) => ({ ...p, foto: fotoDe(p.nombre) })));
   }
   if (pathname === '/api/chat/estado' && metodo === 'GET') {
     return json(res, 200, { disponible: asistenteDisponible() });
@@ -270,7 +272,7 @@ const server = http.createServer(async (req, res) => {
     const data = await readFile(archivo);
     res.writeHead(200, {
       'Content-Type': TIPOS[path.extname(archivo)] || 'application/octet-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': ruta.startsWith('/img/') ? 'public, max-age=86400' : 'no-cache',
     });
     res.end(data);
   } catch (e) {

@@ -1,5 +1,6 @@
 import { buscarProductos, obtenerProducto, crearPedido, ErrorNegocio, normalizar } from './db.js';
 import { guardarConversacion } from './conversaciones.js';
+import { fotoDe } from './fotos.js';
 
 const MAX_PASOS = 6;          // vueltas maximas de herramientas por consulta
 const MAX_HISTORIAL = 20;     // mensajes que se mandan al modelo
@@ -240,7 +241,7 @@ function armarLista(items) {
     if (!p || p.stock <= 0) continue;
     vistos.add(id);
     out.push({
-      id: p.id, nombre: p.nombre, categoria: p.categoria, marca: p.marca, unidad: p.unidad,
+      id: p.id, nombre: p.nombre, categoria: p.categoria, marca: p.marca, unidad: p.unidad, foto: fotoDe(p.nombre),
       precio: p.precio, stock: p.stock, stock_bajo: p.stock <= p.stock_minimo,
       cantidad: Math.min(cantidad, p.stock),
       grupo: it?.grupo === 'recomendado' ? 'recomendado' : 'imprescindible',
