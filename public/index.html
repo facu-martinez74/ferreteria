@@ -2,96 +2,159 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ferretería El Clavo · Pedí lo que necesitás, sin esperar</title>
-  <meta name="description" content="Catálogo con stock real y un asistente con IA que arma la lista de materiales de tu trabajo y deja el pedido listo para retirar.">
-  <meta name="theme-color" content="#111827">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ferretería El Clavo | Armá tu pedido y retiralo en el local</title>
+  <meta name="description" content="Catálogo con stock real y un asistente que arma la lista de materiales de tu trabajo. Pedís desde el celular y retirás en el local.">
+  <meta name="theme-color" content="#262b32">
+  <meta property="og:title" content="Ferretería El Clavo">
+  <meta property="og:description" content="Armá tu pedido desde el celular y retiralo en el local.">
+  <meta property="og:locale" content="es_AR">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/tienda.css">
 </head>
 <body>
-  <header class="top">
-    <div class="wrap top-in">
-      <a class="logo" href="/">🔧 <span>Ferretería <b>El Clavo</b></span></a>
-      <button id="btn-carrito" class="btn-carrito" aria-label="Abrir carrito">
-        🛒 <span>Mi pedido</span> <span id="carrito-cant" class="badge">0</span>
-      </button>
-    </div>
-  </header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4H6a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M5.5 12v8h13v-8"/><path d="M10 20v-4h4v4"/></symbol>
+  <symbol id="i-stock" viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s6-5.6 6-10.5a6 6 0 0 0-12 0C6 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A15 15 0 0 1 4 5a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="c-hammer" viewBox="0 0 24 24"><path d="M12 7l3.5-3.5 5 5L17 12z"/><path d="M13.5 5.5l5 5"/><path d="M12.5 11.5l-8 8a1.4 1.4 0 0 0 2 2l8-8"/></symbol>
+  <symbol id="c-drill" viewBox="0 0 24 24"><path d="M3 8h12a3 3 0 0 1 3 3v2H9.5L8.6 19H5.6l1-6H3z"/><path d="M18 10h3M18 12h3"/></symbol>
+  <symbol id="c-roller" viewBox="0 0 24 24"><rect x="4" y="3" width="14" height="5" rx="1.5"/><path d="M18 5.5h2v5h-8v3"/><rect x="10.5" y="13.5" width="3" height="7" rx="1"/></symbol>
+  <symbol id="c-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="c-faucet" viewBox="0 0 24 24"><path d="M5 9h9a3 3 0 0 1 3 3v2"/><path d="M8 9V5h4v4"/><path d="M6 9v3"/><path d="M17 17.5c-.8 1-1.3 1.6-1.3 2.3a1.3 1.3 0 0 0 2.6 0c0-.7-.5-1.3-1.3-2.3z"/></symbol>
+  <symbol id="c-screw" viewBox="0 0 24 24"><path d="M6 4h12"/><path d="M9 4v4l3 13 3-13V4"/><path d="M9.5 9h5M10.5 13h3M11.3 17h1.4"/></symbol>
+  <symbol id="c-hat" viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0z"/><path d="M10.5 8.2V5h3v3.2"/><path d="M3 19h18"/></symbol>
+  <symbol id="c-plant" viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="M12 12c0-4 2.5-6 7-6 0 4-2.5 6-7 6z"/><path d="M12 15c0-3-2-5-6-5 0 3 2 5 6 5z"/></symbol>
+  <symbol id="c-box" viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/></symbol>
+</defs></svg>
 
-  <section class="hero">
-    <div class="wrap">
-      <h1>Todo para tu obra, <em>sin esperar.</em></h1>
-      <p>Buscá lo que necesitás, armá tu pedido y retiralo por el local.</p>
-      <div class="ia-cta">
-        <div class="ia-cab"><span class="ia-tag">🤖 Asistente con IA</span><strong>Contale tu trabajo y te armo la lista completa</strong></div>
-        <p>Herramientas, materiales, fijaciones y seguridad, con precios y stock real. Si querés, te dejo el pedido listo.</p>
-        <div class="ia-sugs">
-          <button type="button" data-asistente="Quiero colgar un estante en una pared de ladrillo">Colgar un estante</button>
-          <button type="button" data-asistente="Voy a pintar mi dormitorio, ¿qué necesito?">Pintar un ambiente</button>
-          <button type="button" data-asistente="Me pierde agua una canilla">Arreglar una canilla</button>
-          <button type="button" data-asistente="1" class="otro">Otro trabajo…</button>
-        </div>
+<div class="aviso" id="aviso">Armá tu pedido desde el celular y retiralo en el local.</div>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="/" aria-label="Ferretería El Clavo, inicio">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="9" fill="#f4b400"/><path d="M11 10h18v5h-7v15l-2 5-2-5V15h-7z" fill="#16191d"/></svg>
+      <span><b>El Clavo</b><small>Ferretería</small></span>
+    </a>
+    <div class="busca">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="buscador" type="search" aria-label="Buscar productos" placeholder="Buscar: taladro, pintura, tarugos…" autocomplete="off">
+    </div>
+    <button class="hbtn" type="button" data-asistente="1" aria-label="Abrir el asistente"><svg class="i"><use href="#i-chat"/></svg><span>Asistente</span></button>
+    <button id="btn-carrito" class="hbtn pri" type="button" aria-label="Abrir mi pedido"><svg class="i"><use href="#i-bag"/></svg><span>Mi pedido</span><b id="carrito-cant" class="cnt" hidden>0</b></button>
+  </div>
+</header>
+
+<nav class="cats" aria-label="Categorías"><div id="chips" class="chips"></div></nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Todo para tu obra, listo cuando llegás.</h1>
+      <p class="lead">Elegí lo que necesitás, armá tu pedido y pasá a retirarlo. Sin esperar en el mostrador ni mandar mensajes que se pierden.</p>
+      <div class="btns">
+        <a class="btn pri" href="#catalogo">Ver el catálogo</a>
+        <button class="btn dark" type="button" data-asistente="1"><svg class="i"><use href="#i-chat"/></svg>Armar mi lista con el asistente</button>
       </div>
-      <input id="buscador" type="search" aria-label="Buscar productos" placeholder="O buscá directo: &quot;taladro&quot;, &quot;pintura&quot;…" autocomplete="off">
-    </div>
-  </section>
-
-  <main class="wrap">
-    <div id="chips" class="chips"></div>
-    <p id="resumen" class="resumen"></p>
-    <div id="grilla" class="grilla"></div>
-  </main>
-
-  <div id="velo" class="velo" hidden></div>
-
-  <aside id="panel" class="panel" aria-hidden="true">
-    <div class="panel-cab">
-      <h2>Mi pedido</h2>
-      <button id="cerrar-panel" class="cerrar" aria-label="Cerrar">✕</button>
-    </div>
-    <div id="lineas" class="lineas"></div>
-    <div class="panel-pie">
-      <div class="total-fila"><span>Total</span><strong id="total">$0</strong></div>
-      <button id="btn-confirmar" class="btn primario" disabled>Continuar</button>
-    </div>
-  </aside>
-
-  <div id="modal" class="modal" hidden>
-    <div class="modal-caja">
-      <form id="form-pedido">
-        <h2>Confirmá tu pedido</h2>
-        <p class="sub">Te lo preparamos para retirar. Te avisamos al teléfono cuando esté listo.</p>
-        <label>Tu nombre
-          <input name="cliente" required minlength="2" maxlength="80" autocomplete="name">
-        </label>
-        <label>Teléfono / WhatsApp
-          <input name="telefono" required inputmode="tel" maxlength="40" autocomplete="tel">
-        </label>
-        <label>Notas (opcional)
-          <textarea name="notas" rows="2" maxlength="500" placeholder="Ej: lo retiro después de las 18"></textarea>
-        </label>
-        <p id="form-error" class="error" hidden></p>
-        <div class="modal-acc">
-          <button type="button" id="btn-cancelar" class="btn">Volver</button>
-          <button type="submit" id="btn-enviar" class="btn primario">Enviar pedido</button>
-        </div>
-      </form>
-      <div id="exito" hidden>
-        <div class="check">✓</div>
-        <h2>¡Pedido recibido!</h2>
-        <p id="exito-texto"></p>
-        <button id="btn-cerrar-exito" class="btn primario">Seguir mirando</button>
+      <div class="perks">
+        <span><svg class="i"><use href="#i-stock"/></svg>Stock real de cada producto</span>
+        <span><svg class="i"><use href="#i-store"/></svg>Retiro en el local</span>
+        <span><svg class="i"><use href="#i-bell"/></svg>Te avisamos cuando está listo</span>
       </div>
+    </div>
+    <div class="orden">
+      <h2>¿Qué trabajo vas a hacer?</h2>
+      <p class="sub">Contanos y el asistente te arma la lista completa con precios y stock.</p>
+      <button type="button" class="trabajo" data-asistente="Quiero colgar un estante en una pared de ladrillo"><svg class="i"><use href="#c-hammer"/></svg>Colgar un estante<svg class="i go"><use href="#i-arrow"/></svg></button>
+      <button type="button" class="trabajo" data-asistente="Voy a pintar mi dormitorio, ¿qué necesito?"><svg class="i"><use href="#c-roller"/></svg>Pintar un ambiente<svg class="i go"><use href="#i-arrow"/></svg></button>
+      <button type="button" class="trabajo" data-asistente="Me pierde agua una canilla"><svg class="i"><use href="#c-faucet"/></svg>Arreglar una canilla<svg class="i go"><use href="#i-arrow"/></svg></button>
+      <form id="f-asis"><input id="t-asis" maxlength="200" placeholder="Otro trabajo…" aria-label="Describí tu trabajo"><button class="btn pri" type="submit">Preguntar</button></form>
     </div>
   </div>
+</section>
 
-  <footer class="wrap" style="padding:30px 16px 40px;text-align:center;color:#9ca3af;font-size:.85rem">
-    Ferretería El Clavo · <a href="/creditos.html" style="color:inherit">Créditos de las fotos</a> · <a href="/admin" style="color:inherit">Acceso del negocio</a>
-  </footer>
+<main class="wrap catalogo" id="catalogo">
+  <div class="cab">
+    <div><h2 id="tit-cat">Catálogo</h2><p id="resumen"></p></div>
+    <select id="orden" aria-label="Ordenar productos">
+      <option value="">Más relevantes</option>
+      <option value="menor">Menor precio</option>
+      <option value="mayor">Mayor precio</option>
+      <option value="az">Nombre A–Z</option>
+    </select>
+  </div>
+  <div id="grilla" class="grilla"></div>
+</main>
 
-  <script src="/icons.js"></script>
-  <script src="/app.js"></script>
-  <script src="/chat.js" defer></script>
+<section class="pasos-b"><div class="wrap">
+  <h2>Cómo pedir</h2>
+  <ol class="pasos">
+    <li><b>1</b><div><h3>Elegí</h3><p>Buscá en el catálogo o contale tu trabajo al asistente.</p></div></li>
+    <li><b>2</b><div><h3>Confirmá</h3><p>Dejá tu nombre y teléfono. El stock se reserva al instante.</p></div></li>
+    <li><b>3</b><div><h3>Retirá</h3><p>Te avisamos cuando esté listo y pasás por el local.</p></div></li>
+  </ol>
+</div></section>
+
+<footer><div class="wrap pie">
+  <div><b>Ferretería El Clavo</b><p>Pedidos para retirar en el local.</p></div>
+  <ul id="contacto" hidden></ul>
+  <a href="/creditos.html" class="acc-neg">Créditos de las fotos</a> · <a href="/admin" class="acc-neg">Acceso del negocio</a>
+</div></footer>
+
+<div id="velo" class="velo"></div>
+
+<aside id="panel" class="panel" aria-hidden="true" aria-label="Mi pedido">
+  <div class="ph"><h2>Mi pedido</h2><button id="cerrar-panel" class="x" type="button" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div id="lineas" class="pb"></div>
+  <div class="pf">
+    <div class="tot"><span>Total</span><b id="total">$0</b></div>
+    <p class="nota"><svg class="i"><use href="#i-store"/></svg>Lo retirás en el local, no se paga online.</p>
+    <button id="btn-confirmar" class="btn pri" type="button" disabled>Continuar</button>
+  </div>
+</aside>
+
+<section id="hoja-det" class="hoja" role="dialog" aria-modal="true" aria-label="Detalle del producto">
+  <button class="x cerrar-hoja" type="button" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+  <div id="det"></div>
+</section>
+
+<section id="hoja-pedido" class="hoja" role="dialog" aria-modal="true" aria-label="Confirmar pedido">
+  <button class="x cerrar-hoja" type="button" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+  <form id="form-pedido">
+    <h2>Confirmá tu pedido</h2>
+    <p class="sub">Te lo preparamos para retirar y te avisamos al teléfono cuando esté listo.</p>
+    <label>Tu nombre<input name="cliente" required minlength="2" maxlength="80" autocomplete="name"></label>
+    <label>Teléfono o WhatsApp<input name="telefono" required inputmode="tel" maxlength="40" autocomplete="tel"></label>
+    <label>Notas (opcional)<textarea name="notas" rows="2" maxlength="500" placeholder="Ej: lo retiro después de las 18"></textarea></label>
+    <p id="form-error" class="error" hidden></p>
+    <div class="acciones">
+      <button type="button" id="btn-cancelar" class="btn">Volver</button>
+      <button type="submit" id="btn-enviar" class="btn pri">Enviar pedido</button>
+    </div>
+  </form>
+  <div id="exito" hidden>
+    <div class="check"><svg class="i"><use href="#i-check"/></svg></div>
+    <h2>¡Pedido recibido!</h2>
+    <p id="exito-texto"></p>
+    <button id="btn-cerrar-exito" class="btn pri" type="button">Seguir mirando</button>
+  </div>
+</section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="/negocio.js"></script>
+<script src="/app.js"></script>
+<script src="/chat.js" defer></script>
 </body>
 </html>

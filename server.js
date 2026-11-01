@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { createHash, createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import path from 'node:path';
+import { fotoDe } from './fotos.js';
 import { fileURLToPath } from 'node:url';
 import {
   buscarProductos, listarCategorias, crearPedido, ErrorNegocio,
@@ -10,7 +11,6 @@ import {
 } from './db.js';
 import { responder, asistenteDisponible } from './assistant.js';
 import { listarConversaciones } from './conversaciones.js';
-import { fotoDe } from './fotos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');

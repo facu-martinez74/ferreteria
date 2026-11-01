@@ -43,3 +43,8 @@ En producción corre con PM2 detrás de nginx (puerto 3000).
 
 ## Qué mejoraría
 Pagos online, avisos automáticos por WhatsApp, fotos de producto, y que el asistente aprenda de los pedidos anteriores para sugerir cantidades.
+
+## Diseño de la tienda
+La tienda (`public/index.html`, `tienda.css`, `app.js`) está pensada primero para el celular: encabezado con buscador, categorías que se deslizan, grilla de 2 columnas, ficha de producto como hoja inferior y pedido en panel lateral. `styles.css` queda solo para el panel `/admin`.
+
+Los datos del local (dirección, horarios, teléfono, WhatsApp) se completan en `public/negocio.js`; lo que quede vacío no se muestra.
