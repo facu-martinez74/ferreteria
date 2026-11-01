@@ -308,7 +308,7 @@ const server = http.createServer(async (req, res) => {
     let ruta;
     try { ruta = decodeURIComponent(url.pathname); } catch { res.writeHead(400); return res.end('Solicitud inválida'); }
     if (ruta === '/') ruta = '/index.html';
-    if (ruta === '/admin' || ruta === '/admin/') ruta = '/admin.html';
+    if (['/admin', '/admin/', '/panel', '/panel/'].includes(ruta)) ruta = '/admin.html';
     const archivo = path.normalize(path.join(PUBLIC, ruta));
     if (archivo !== PUBLIC && !archivo.startsWith(PUBLIC + path.sep)) {
       res.writeHead(403);
