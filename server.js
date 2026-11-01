@@ -3,11 +3,13 @@ import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { createHash, createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import path from 'node:path';
+import { fotoDe } from './fotos.js';
 import { fileURLToPath } from 'node:url';
 import {
   buscarProductos, listarCategorias, crearPedido, ErrorNegocio,
-  listarPedidos, cambiarEstadoPedido, resumenAdmin, actualizarProducto, estadisticas,
+  listarPedidos, cambiarEstadoPedido, seguimientoPedido, resumenAdmin, actualizarProducto, estadisticas, configEnvio,
 } from './db.js';
+import { registrar, ingresar, clienteDeToken, cerrarSesion, actualizarCliente, pedidosDeCliente } from './clientes.js';
 import { responder, asistenteDisponible } from './assistant.js';
 import { listarConversaciones } from './conversaciones.js';
 
@@ -49,7 +51,9 @@ const TIPOS = {
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
+  '.webmanifest': 'application/manifest+json',
   '.ico': 'image/x-icon',
 };
 
@@ -135,6 +139,10 @@ const chatPorDia = crearLimitador(num(process.env.CHAT_MAX_POR_DIA, 200), 24 * 3
 const chatGlobalPorHora = crearLimitador(num(process.env.CHAT_MAX_GLOBAL_HORA, 1200), 3600_000);
 const pedidosPorIp = crearLimitador(num(process.env.PEDIDOS_MAX_10MIN, 8), 10 * 60_000);
 const adminPorMin = crearLimitador(120, 60_000);
+const seguimientoPorIp = crearLimitador(30, 10 * 60_000);
+const authPorIp = crearLimitador(15, 10 * 60_000);
+const tokenDe = (req) => { const h = req.headers.authorization || ''; return h.startsWith('Bearer ') ? h.slice(7) : ''; };
+const clienteDe = (req) => clienteDeToken(tokenDe(req));
 
 /* ---------- API ---------- */
 async function api(req, res, url) {
@@ -144,6 +152,36 @@ async function api(req, res, url) {
   if (pathname === '/api/health' && metodo === 'GET') {
     return json(res, 200, { ok: true, hora: new Date().toISOString() });
   }
+  if (pathname === '/api/config' && metodo === 'GET') {
+    return json(res, 200, { envio: configEnvio() });
+  }
+
+  /* --- Cuentas de clientes --- */
+  if (pathname === '/api/auth/registro' && metodo === 'POST') {
+    if (!authPorIp(ipDe(req))) return json(res, 429, { error: 'Demasiados intentos. Esperá unos minutos.' });
+    return json(res, 201, registrar(await leerJSON(req, 5_000)));
+  }
+  if (pathname === '/api/auth/login' && metodo === 'POST') {
+    if (!authPorIp(ipDe(req))) return json(res, 429, { error: 'Demasiados intentos. Esperá unos minutos.' });
+    const c = await leerJSON(req, 2_000);
+    return json(res, 200, ingresar(c.email, c.password));
+  }
+  if (pathname === '/api/auth/logout' && metodo === 'POST') {
+    cerrarSesion(tokenDe(req));
+    return json(res, 200, { ok: true });
+  }
+  if (pathname === '/api/auth/yo') {
+    const cli = clienteDe(req);
+    if (!cli) return json(res, 401, { error: 'Sesión vencida. Ingresá de nuevo.' });
+    if (metodo === 'GET') return json(res, 200, cli);
+    if (metodo === 'PATCH') return json(res, 200, actualizarCliente(cli.id, await leerJSON(req, 3_000)));
+  }
+  if (pathname === '/api/auth/pedidos' && metodo === 'GET') {
+    const cli = clienteDe(req);
+    if (!cli) return json(res, 401, { error: 'Sesión vencida. Ingresá de nuevo.' });
+    return json(res, 200, pedidosDeCliente(cli.id));
+  }
+
   if (pathname === '/api/categorias' && metodo === 'GET') {
     return json(res, 200, listarCategorias());
   }
@@ -152,7 +190,7 @@ async function api(req, res, url) {
       q: url.searchParams.get('q') || '',
       categoria: url.searchParams.get('categoria') || '',
     });
-    return json(res, 200, productos);
+    return json(res, 200, productos.map((p) => ({ ...p, foto: fotoDe(p.nombre) })));
   }
   if (pathname === '/api/chat/estado' && metodo === 'GET') {
     return json(res, 200, { disponible: asistenteDisponible() });
@@ -186,12 +224,20 @@ async function api(req, res, url) {
     }
     return res.end();
   }
+  if (pathname === '/api/pedidos/seguimiento' && metodo === 'GET') {
+    if (!seguimientoPorIp(ipDe(req))) return json(res, 429, { error: 'Demasiadas consultas. Esperá unos minutos.' });
+    return json(res, 200, seguimientoPedido(url.searchParams.get('n'), url.searchParams.get('t')));
+  }
   if (pathname === '/api/pedidos' && metodo === 'POST') {
     if (!pedidosPorIp(ipDe(req))) {
       return json(res, 429, { error: 'Hiciste varios pedidos seguidos. Esperá unos minutos o llamanos al local.' });
     }
     const cuerpo = await leerJSON(req);
-    const pedido = crearPedido({ cliente: cuerpo.cliente, telefono: cuerpo.telefono, notas: cuerpo.notas, items: cuerpo.items, origen: 'web' });
+    const cli = clienteDe(req);
+    const pedido = crearPedido({
+      cliente: cuerpo.cliente, telefono: cuerpo.telefono, notas: cuerpo.notas, items: cuerpo.items, origen: 'web',
+      clienteId: cli ? cli.id : null, entrega: cuerpo.entrega, direccion: cuerpo.direccion, pago: cuerpo.pago,
+    });
     return json(res, 201, pedido);
   }
 
@@ -270,7 +316,7 @@ const server = http.createServer(async (req, res) => {
     const data = await readFile(archivo);
     res.writeHead(200, {
       'Content-Type': TIPOS[path.extname(archivo)] || 'application/octet-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': ruta.startsWith('/img/') ? 'public, max-age=86400' : 'no-cache',
     });
     res.end(data);
   } catch (e) {

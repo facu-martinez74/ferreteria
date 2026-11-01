@@ -3,7 +3,7 @@ const $ = (s) => document.querySelector(s);
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const N = window.NEGOCIO || {};
-const PASOS = [
+const PASOS_BASE = [
   ['nuevo', 'Pedido recibido', 'Ya lo tenemos y el stock está reservado.'],
   ['preparando', 'Lo estamos preparando', 'Estamos juntando tus productos.'],
   ['listo', 'Listo para retirar', 'Pasá por el local cuando quieras.'],
@@ -12,6 +12,8 @@ const PASOS = [
 let timer = null;
 
 function dibujar(p) {
+  const envio = p.entrega === 'envio';
+  const PASOS = envio ? PASOS_BASE.map((x) => (x[0] === 'listo' ? ['listo', 'Listo para enviar', 'Tu pedido está armado y sale hacia tu domicilio.'] : x)) : PASOS_BASE;
   const idx = PASOS.findIndex((x) => x[0] === p.estado);
   const cancelado = p.estado === 'cancelado';
   const titulo = cancelado ? 'Pedido cancelado' : PASOS[idx]?.[1] || p.estado;
@@ -25,9 +27,10 @@ function dibujar(p) {
     <div><span class="num">Pedido #${esc(p.id)} · ${esc(new Date(p.creado).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }))}</span>
     <div class="estado-t">${esc(titulo)}</div><span class="num">Hola ${esc(p.cliente)}, este es el estado de tu pedido.</span></div>
     ${cancelado ? '<div class="cancelado">Este pedido fue cancelado. Si fue un error, llamanos o hacé uno nuevo desde la tienda.</div>' : ''}
-    ${p.estado === 'listo' ? '<div class="listo-box">¡Tu pedido está listo! Podés pasar a retirarlo.</div>' : ''}
+    ${p.estado === 'listo' ? `<div class="listo-box">${envio ? '¡Tu pedido está listo y sale hacia tu domicilio!' : '¡Tu pedido está listo! Podés pasar a retirarlo.'}</div>` : ''}
     ${linea}
     <div class="items">${p.items.map((i) => `<div><span>${esc(i.cantidad)} × ${esc(i.nombre)}</span><span>${esc(fmt.format(i.precio * i.cantidad))}</span></div>`).join('')}</div>
+    ${p.costo_envio ? `<div class="items"><div><span>Envío a domicilio</span><span>${esc(fmt.format(p.costo_envio))}</span></div></div>` : ''}
     <div class="total"><span>Total</span><span>${esc(fmt.format(p.total))}</span></div>
     ${local.length ? `<div class="local">${local.map((l) => `<span>${l}</span>`).join('')}</div>` : ''}`;
 }

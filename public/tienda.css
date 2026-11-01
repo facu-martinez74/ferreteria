@@ -176,3 +176,60 @@ label input:focus,label textarea:focus,#f-asis input:focus,#orden:focus{outline:
 .hero .wrap>*{min-width:0}
 html,body{overflow-x:hidden}
 .perks{flex-wrap:wrap}
+
+/* ---- Categorías: en PC se ven todas (sin desplazar); en celular se desliza ---- */
+@media(min-width:881px){
+  .cats{position:static}
+  .chips{flex-wrap:wrap;overflow:visible;justify-content:center;padding-block:12px}
+}
+
+/* ---- Franja de confianza ---- */
+.confianza{background:#fff;border-bottom:1px solid var(--line)}
+.confianza .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 20px;padding-block:18px}
+.confianza .wrap>div{display:flex;align-items:center;gap:12px}
+.confianza .i{width:30px;height:30px;color:var(--y2);stroke-width:1.5}
+.confianza span{display:flex;flex-direction:column;font-size:.82rem;color:var(--mut);line-height:1.3}
+.confianza b{color:var(--ink);font-size:.93rem}
+@media(max-width:880px){.confianza .wrap{grid-template-columns:repeat(2,1fr)}.confianza .i{width:26px;height:26px}}
+
+/* ---- Cuenta, tabs, checkout ---- */
+.hoja.ancha{width:min(640px,calc(100% - 24px))}
+.tabs{display:flex;gap:4px;background:#eef0f2;border-radius:12px;padding:4px;margin:6px 40px 16px 0}
+.tabs button{flex:1;height:38px;border-radius:9px;font-weight:700;color:var(--mut)}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media(max-width:560px){.dos{grid-template-columns:1fr}}
+fieldset.grupo{border:0;padding:0;margin:0 0 14px}
+fieldset.grupo legend{font-size:.85rem;font-weight:700;margin-bottom:8px;padding:0}
+fieldset.grupo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+fieldset.grupo legend{grid-column:1/-1}
+@media(max-width:560px){fieldset.grupo{grid-template-columns:1fr}}
+label.opcion{display:flex;gap:10px;align-items:flex-start;margin:0;padding:12px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;font-weight:400;background:#fff}
+label.opcion input{width:auto;margin:3px 0 0;padding:0;display:inline-block;accent-color:var(--ink);flex:none}
+label.opcion span{display:flex;flex-direction:column;line-height:1.3}
+label.opcion b{font-size:.93rem}label.opcion small{color:var(--mut);font-size:.8rem}
+label.opcion:has(input:checked){border-color:var(--ink);background:#fffaf0;box-shadow:0 0 0 1px var(--ink)}
+.aviso-cuenta{font-size:.88rem;background:#f3f5f7;border-radius:10px;padding:10px 12px;margin:2px 0 16px;color:#39414a}
+.aviso-cuenta a,.aviso-cuenta button{color:var(--ink);font-weight:700;text-decoration:underline}
+.aviso-cuenta.ok{background:#e8f5ec;color:#14532d}
+.resumen-ped{background:#f6f7f8;border-radius:12px;padding:12px 14px;margin:2px 0 14px;display:grid;gap:5px;font-size:.92rem}
+.resumen-ped div{display:flex;justify-content:space-between}
+.resumen-ped .t{font-size:1.15rem;font-weight:800;border-top:1px dashed #c4cad1;padding-top:7px;margin-top:3px}
+.resumen-ped .gr{color:var(--ok);font-weight:700}
+.transf{background:#f3f5f7;border-radius:12px;padding:12px 14px;text-align:left;margin:0 0 16px;font-size:.92rem}
+.transf b{display:inline-block;min-width:72px;color:var(--mut);font-weight:600}
+#exito .transf{margin-top:14px}
+#exito .btn{margin:4px}
+
+/* Mis pedidos */
+.mp{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.mp-cab{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.mp-cab b{font-size:1.02rem}
+.mp small{color:var(--mut)}
+.pill{display:inline-block;border-radius:99px;padding:3px 11px;font-size:.78rem;font-weight:700;background:#e5e7eb}
+.pill.nuevo{background:#fde68a}.pill.preparando{background:#bfdbfe}.pill.listo{background:#bbf7d0}.pill.entregado{background:#e5e7eb}.pill.cancelado{background:#fecaca}
+.mp ul{list-style:none;padding:0;margin:10px 0;font-size:.9rem;display:grid;gap:3px}
+.mp li{display:flex;justify-content:space-between;gap:10px}
+.mp-pie{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+.mp-pie .btn{height:38px;padding:0 14px;font-size:.88rem}
+.vacio-mis{text-align:center;color:var(--mut);padding:30px 8px}

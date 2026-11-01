@@ -58,8 +58,30 @@ try {
 } catch (e) {
   console.error('Migración pedidos.conversacion_id falló:', e);
 }
+// Migración liviana: cuenta del cliente, entrega (retiro/envío) y forma de pago
+try {
+  const cols2 = db.prepare('PRAGMA table_info(pedidos)').all().map((c) => c.name);
+  const nuevas = {
+    cliente_id: 'INTEGER',
+    entrega: "TEXT NOT NULL DEFAULT 'retiro'",
+    direccion: "TEXT NOT NULL DEFAULT ''",
+    costo_envio: 'INTEGER NOT NULL DEFAULT 0',
+    pago: "TEXT NOT NULL DEFAULT 'efectivo'",
+  };
+  for (const [col, tipo] of Object.entries(nuevas)) if (!cols2.includes(col)) db.exec(`ALTER TABLE pedidos ADD COLUMN ${col} ${tipo}`);
+} catch (e) {
+  console.error('Migración de pedidos (entrega/pago) falló:', e);
+}
+db.exec('CREATE INDEX IF NOT EXISTS idx_pedidos_cliente ON pedidos(cliente_id)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_pedidos_creado ON pedidos(creado)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_items_pedido ON pedido_items(pedido_id)');
+
+// Envío a domicilio: se lee del entorno al usarse (el .env se carga después de importar este archivo).
+export function configEnvio() {
+  const n = (v, d) => (Number.isFinite(Number(v)) && Number(v) >= 0 && v !== undefined && v !== '' ? Number(v) : d);
+  return { costo: n(process.env.ENVIO_COSTO, 3500), gratis_desde: n(process.env.ENVIO_GRATIS_DESDE, 60000) };
+}
+export const PAGOS = ['efectivo', 'transferencia'];
 
 export function normalizar(s = '') {
   return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -143,6 +165,29 @@ function sembrar() {
 }
 sembrar();
 
+// Productos agregados despues de la primera version del catalogo. Se insertan solos si faltan
+// (no tocan stock ni pedidos de los productos que ya existen).
+const SEMILLA_EXTRA = [
+  ['Espatula flexible 10 cm', 'Pintureria', 'Atlas', 5400, 30, 8, 'unidad', 'Espatula de acero flexible con mango, para raspar y aplicar enduido.', 'reparar paredes, aplicar enduido, raspar pintura, humedad, descascarado'],
+  ['Cepillo de alambre', 'Herramientas manuales', 'Bremen', 4200, 25, 6, 'unidad', 'Cepillo de alambre de acero con mango de madera.', 'raspar pintura descascarada, limpiar oxido, salitre, humedad, preparar paredes'],
+  ['Antihongos concentrado 1 L', 'Pintureria', 'Alba', 6800, 20, 5, 'botella', 'Elimina moho y hongos de las paredes antes de pintar.', 'moho, hongos, manchas negras, humedad, bano, cocina'],
+  ['Hidrofugo para paredes 4 L', 'Pintureria', 'Sika', 16900, 14, 4, 'lata', 'Liquido hidrofugo que frena el paso de la humedad en muros interiores y exteriores.', 'humedad en paredes, humedad ascendente, manchas de humedad, salitre, impermeabilizar'],
+  ['Fijador sellador al agua 4 L', 'Pintureria', 'Sinteplast', 13200, 16, 4, 'lata', 'Fijador para preparar paredes antes de pintar: mejora la adherencia y uniforma la absorcion.', 'preparar paredes, antes de pintar, paredes descascaradas, humedad, sellar'],
+  ['Latex antihumedad interior 4 L', 'Pintureria', 'Alba', 38500, 12, 3, 'lata', 'Pintura latex con fungicida para paredes interiores con humedad y moho. Rinde unos 40 m2 por mano.', 'humedad, moho, manchas de humedad, pintar bano, pintar cocina, paredes humedas'],
+];
+
+function completarCatalogo() {
+  const existe = db.prepare('SELECT 1 FROM productos WHERE nombre = ?');
+  const ins = db.prepare(`INSERT INTO productos
+    (nombre, categoria, marca, precio, stock, stock_minimo, unidad, descripcion, usos, busqueda)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  for (const [nombre, categoria, marca, precio, stock, minimo, unidad, descripcion, usos] of SEMILLA_EXTRA) {
+    if (existe.get(nombre)) continue;
+    ins.run(nombre, categoria, marca, precio, stock, minimo, unidad, descripcion, usos, normalizar([nombre, categoria, marca, descripcion, usos].join(' ')));
+  }
+}
+completarCatalogo();
+
 const CAMPOS = 'id, nombre, categoria, marca, descripcion, usos, precio, stock, stock_minimo, unidad';
 
 export function buscarProductos({ q = '', categoria = '', soloConStock = false, limite = 200 } = {}) {
@@ -174,11 +219,17 @@ export function listarCategorias() {
 
 // Crea un pedido validando stock real y descontandolo en una sola transaccion.
 // Lo usan tanto la web como (mas adelante) el asistente de IA.
-export function crearPedido({ cliente, telefono, notas = '', items, origen = 'web', conversacionId = null }) {
+export function crearPedido({ cliente, telefono, notas = '', items, origen = 'web', conversacionId = null, clienteId = null, entrega = 'retiro', direccion = '', pago = 'efectivo' }) {
   cliente = String(cliente || '').trim().slice(0, 80);
   telefono = String(telefono || '').trim().slice(0, 40);
   notas = String(notas || '').trim().slice(0, 500);
   conversacionId = typeof conversacionId === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(conversacionId) ? conversacionId : null;
+  entrega = entrega === 'envio' ? 'envio' : 'retiro';
+  direccion = String(direccion || '').trim().slice(0, 160);
+  if (!PAGOS.includes(pago)) pago = 'efectivo';
+  clienteId = Number.isInteger(clienteId) ? clienteId : null;
+  if (entrega === 'envio' && direccion.length < 6) throw new ErrorNegocio('Ingresá la dirección de entrega (calle, número y localidad).');
+  if (entrega === 'retiro') direccion = '';
   if (cliente.length < 2) throw new ErrorNegocio('Ingresa tu nombre.');
   if (telefono.replace(/\D/g, '').length < 6) throw new ErrorNegocio('Ingresa un telefono valido.');
   if (!Array.isArray(items) || items.length === 0) throw new ErrorNegocio('El pedido esta vacio.');
@@ -212,9 +263,13 @@ export function crearPedido({ cliente, telefono, notas = '', items, origen = 'we
       total += p.precio * cantidad;
     }
 
+    const subtotal = total;
+    const cfg = configEnvio();
+    const costoEnvio = entrega === 'envio' && subtotal < cfg.gratis_desde ? cfg.costo : 0;
+    total = subtotal + costoEnvio;
     const res = db.prepare(
-      'INSERT INTO pedidos (cliente, telefono, notas, total, estado, origen, creado, conversacion_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(cliente, telefono, notas, total, 'nuevo', origen, new Date().toISOString(), conversacionId);
+      'INSERT INTO pedidos (cliente, telefono, notas, total, estado, origen, creado, conversacion_id, cliente_id, entrega, direccion, costo_envio, pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(cliente, telefono, notas, total, 'nuevo', origen, new Date().toISOString(), conversacionId, clienteId, entrega, direccion, costoEnvio, pago);
     const pedidoId = Number(res.lastInsertRowid);
 
     const insItem = db.prepare(
@@ -226,7 +281,7 @@ export function crearPedido({ cliente, telefono, notas = '', items, origen = 'we
       descuenta.run(l.cantidad, l.producto_id);
     }
     db.exec('COMMIT');
-    return { id: pedidoId, cliente, telefono, total, estado: 'nuevo', items: lineas };
+    return { id: pedidoId, cliente, telefono, subtotal, costo_envio: costoEnvio, total, entrega, direccion, pago, estado: 'nuevo', items: lineas };
   } catch (e) {
     db.exec('ROLLBACK');
     throw e;
@@ -343,4 +398,24 @@ export function estadisticas(dias = 14) {
   } catch { /* la tabla conversaciones puede no existir todavia */ }
   const ticket = db.prepare("SELECT AVG(total) AS t FROM pedidos WHERE estado != 'cancelado'").get().t;
   return { serie, top, origen, conversaciones: conv, ticket_promedio: Math.round(Number(ticket || 0)) };
+}
+
+/* ---------------- Seguimiento para el cliente ---------------- */
+// Se consulta con el numero de pedido + los ultimos 4 digitos del telefono. Solo devuelve el primer nombre.
+export function seguimientoPedido(id, telefono) {
+  id = Number(id);
+  const digitos = String(telefono || '').replace(/\D/g, '');
+  if (!Number.isInteger(id) || id < 1 || digitos.length < 4) {
+    throw new ErrorNegocio('Ingresa el numero de pedido y los ultimos 4 digitos de tu telefono.');
+  }
+  const p = db.prepare('SELECT id, cliente, telefono, total, estado, origen, creado, entrega, costo_envio, pago FROM pedidos WHERE id = ?').get(id);
+  const ult4 = (s) => String(s || '').replace(/\D/g, '').slice(-4);
+  if (!p || ult4(p.telefono) !== digitos.slice(-4)) {
+    throw new ErrorNegocio('No encontramos un pedido con esos datos. Revisa el numero y tu telefono.', 404);
+  }
+  const items = db.prepare('SELECT nombre, cantidad, precio FROM pedido_items WHERE pedido_id = ? ORDER BY id').all(id);
+  return {
+    id: p.id, cliente: String(p.cliente).split(' ')[0], total: p.total, estado: p.estado, origen: p.origen, creado: p.creado, entrega: p.entrega, costo_envio: p.costo_envio, pago: p.pago,
+    items: items.map((i) => ({ nombre: i.nombre, cantidad: i.cantidad, precio: i.precio })),
+  };
 }

@@ -148,7 +148,8 @@ function dibujarPedidos() {
           <span class="pill ${p.estado}">${ESTADOS[p.estado] || esc(p.estado)}</span>
         </div>
       </div>
-      <div class="ped-meta">📞 <a href="tel:${esc(p.telefono)}">${esc(p.telefono)}</a> · ${hace(p.creado)}</div>
+      <div class="ped-meta">📞 <a href="tel:${esc(p.telefono)}">${esc(p.telefono)}</a> · ${hace(p.creado)}${p.cliente_id ? ' · 👤 cliente registrado' : ''}</div>
+      <div class="ped-meta">${p.entrega === 'envio' ? `🚚 <b>Envío</b> a ${esc(p.direccion)} (${p.costo_envio ? fmt.format(p.costo_envio) : 'gratis'})` : '🏬 <b>Retiro</b> en el local'} · 💳 ${p.pago === 'transferencia' ? 'Transferencia (verificar comprobante)' : 'Efectivo'}</div>
       <ul class="ped-items">
         ${p.items.map((i) => `<li><span>${i.cantidad} × ${esc(i.nombre)}</span><span>${fmt.format(i.precio * i.cantidad)}</span></li>`).join('')}
       </ul>
