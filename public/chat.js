@@ -3,9 +3,9 @@
   'use strict';
 
   const CSS = `
-  :root { --fc-color: #d99f00; --fc-oscuro: #262b32; }
+  :root { --fc-color: #eab308; --fc-oscuro: #111827; }
   .fc-fab { position: fixed; right: 18px; bottom: 18px; z-index: 60; display: flex; align-items: center; gap: 8px;
-    background: #f4b400; color: #16191d; border: 0; border-radius: 999px; padding: 14px 20px; font: 600 15px system-ui, sans-serif;
+    background: #facc15; color: #111827; border: 0; border-radius: 999px; padding: 14px 20px; font: 600 15px system-ui, sans-serif;
     cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
   .fc-fab:hover { filter: brightness(1.07); }
   .fc-ventana { position: fixed; right: 18px; bottom: 18px; z-index: 70; width: 390px; max-width: calc(100vw - 24px);
@@ -18,10 +18,10 @@
   .fc-cab .tit span { font-size: 12px; opacity: .75; }
   .fc-cab button { background: transparent; border: 0; color: #fff; cursor: pointer; font-size: 13px; opacity: .85; padding: 6px; }
   .fc-cab button:hover { opacity: 1; }
-  .fc-msgs { flex: 1; overflow-y: auto; padding: 14px; background: #eceef0; display: flex; flex-direction: column; gap: 10px; }
+  .fc-msgs { flex: 1; overflow-y: auto; padding: 14px; background: #f3f4f6; display: flex; flex-direction: column; gap: 10px; }
   .fc-m { max-width: 88%; padding: 10px 13px; border-radius: 14px; font-size: 14.5px; line-height: 1.45; word-wrap: break-word; }
-  .fc-m.bot { background: #fff; color: #16191d; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-  .fc-m.yo { background: #f4b400; color: #16191d; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .fc-m.bot { background: #fff; color: #111827; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .fc-m.yo { background: #facc15; color: #111827; align-self: flex-end; border-bottom-right-radius: 4px; }
   .fc-m ul { margin: 6px 0 6px 18px; padding: 0; }
   .fc-m li { margin: 2px 0; }
   .fc-m.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
@@ -32,13 +32,13 @@
   .fc-escribiendo i { width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; animation: fcsalto 1s infinite ease-in-out; }
   .fc-escribiendo i:nth-child(2) { animation-delay: .15s; } .fc-escribiendo i:nth-child(3) { animation-delay: .3s; }
   @keyframes fcsalto { 0%, 80%, 100% { transform: translateY(0); opacity: .5; } 40% { transform: translateY(-5px); opacity: 1; } }
-  .fc-sugs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 10px; background: #eceef0; }
+  .fc-sugs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 10px; background: #f3f4f6; }
   .fc-sugs button { background: #fff; border: 1px solid #d1d5db; border-radius: 999px; padding: 7px 12px; font-size: 13px; cursor: pointer; color: #374151; text-align: left; }
   .fc-sugs button:hover { border-color: var(--fc-color); color: var(--fc-color); }
   .fc-form { display: flex; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #e5e7eb; }
   .fc-form textarea { flex: 1; resize: none; border: 1px solid #d1d5db; border-radius: 10px; padding: 9px 11px; font: 16px system-ui, sans-serif; max-height: 90px; outline: none; }
   .fc-form textarea:focus { border-color: var(--fc-color); }
-  .fc-form button { background: #f4b400; color: #16191d; border: 0; border-radius: 10px; padding: 0 16px; font-weight: 600; cursor: pointer; }
+  .fc-form button { background: #facc15; color: #111827; border: 0; border-radius: 10px; padding: 0 16px; font-weight: 600; cursor: pointer; }
   .fc-form button:disabled { opacity: .5; cursor: not-allowed; }
   .fc-estado { align-self: flex-start; display: flex; align-items: center; gap: 8px; color: #6b7280; font-size: 13px; padding: 2px 4px; }
   .fc-estado .pts { display: flex; gap: 3px; } .fc-estado .pts i { width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; animation: fcsalto 1s infinite ease-in-out; }
@@ -47,26 +47,22 @@
   .fc-grupo { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; background: #f9fafb; padding: 7px 12px; border-bottom: 1px solid #e5e7eb; }
   .fc-grupo.rec { border-top: 1px solid #e5e7eb; }
   .fc-it { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 9px 12px; border-bottom: 1px solid #f1f5f9; }
-  .fc-it .n { font-size: 13.5px; font-weight: 600; line-height: 1.25; color: #16191d; }
+  .fc-it .n { font-size: 13.5px; font-weight: 600; line-height: 1.25; color: #111827; }
   .fc-it .d { font-size: 12px; color: #6b7280; }
   .fc-it .d .poco { color: #b45309; font-weight: 600; }
   .fc-it .p { grid-row: 1 / 3; grid-column: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .fc-it .p b { font-size: 14px; color: #16191d; }
-  .fc-it .p button { background: #f4b400; color: #16191d; border: 0; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .fc-it .p b { font-size: 14px; color: #111827; }
+  .fc-it .p button { background: #facc15; color: #111827; border: 0; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
   .fc-it .p button.ok { background: #dcfce7; color: #166534; cursor: default; }
-  .fc-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: #fdf6df; flex-wrap: wrap; }
+  .fc-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: #fffbeb; flex-wrap: wrap; }
   .fc-pie b { font-size: 15px; }
   .fc-pie .acc { display: flex; gap: 6px; flex-wrap: wrap; }
-  .fc-pie button { border: 1px solid #d99f00; background: #f4b400; color: #16191d; border-radius: 9px; padding: 8px 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .fc-pie button { border: 1px solid #eab308; background: #facc15; color: #111827; border-radius: 9px; padding: 8px 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
   .fc-pie button.sec { background: #fff; border-color: #d1d5db; font-weight: 600; }
   .fc-m.bot b { font-weight: 700; }
   @media (max-width: 520px) {
     .fc-ventana { right: 0; bottom: 0; width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; }
     .fc-fab { right: 12px; bottom: 12px; }
-  .fc-cab { border-bottom: 5px solid transparent; border-image: repeating-linear-gradient(135deg, #f4b400 0 10px, #16191d 10px 20px) 1; }
-  .fc-fab { z-index: 60; } .fc-fab .i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .fc-ventana { border-radius: 18px; }
-  .fc-m.bot, .fc-lista { border-radius: 14px; }
   }`;
 
   const SUGERENCIAS = [
@@ -119,7 +115,7 @@
 
   const fab = document.createElement('button');
   fab.className = 'fc-fab';
-  fab.innerHTML = '<svg class="i"><use href="#i-chat"/></svg><span>Asistente</span>';
+  fab.innerHTML = '<span>💬</span><span>Asistente</span>';
   fab.setAttribute('aria-label', 'Abrir el asistente');
 
   const ventana = document.createElement('section');
@@ -299,7 +295,7 @@
       for (const p of datos.pedidos || []) {
         const c = document.createElement('div');
         c.className = 'fc-pedido';
-        c.innerHTML = `<b>✅ Pedido #${esc(p.id)} registrado</b>Total ${esc(fmt.format(p.total))}. El local lo prepara y te avisa.<br><a href="/seguimiento.html?n=${encodeURIComponent(p.id)}" style="color:inherit;font-weight:700">Seguir mi pedido</a>`;
+        c.innerHTML = `<b>✅ Pedido #${esc(p.id)} registrado</b>Total ${esc(fmt.format(p.total))}. El local lo prepara y te avisa.`;
         $msgs.appendChild(c);
         bajar();
         if (typeof window.cargarProductos === 'function') window.cargarProductos();
