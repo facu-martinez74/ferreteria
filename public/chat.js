@@ -299,7 +299,7 @@
       for (const p of datos.pedidos || []) {
         const c = document.createElement('div');
         c.className = 'fc-pedido';
-        c.innerHTML = `<b>✅ Pedido #${esc(p.id)} registrado</b>Total ${esc(fmt.format(p.total))}. El local lo prepara y te avisa.`;
+        c.innerHTML = `<b>✅ Pedido #${esc(p.id)} registrado</b>Total ${esc(fmt.format(p.total))}. El local lo prepara y te avisa.<br><a href="/seguimiento.html?n=${encodeURIComponent(p.id)}" style="color:inherit;font-weight:700">Seguir mi pedido</a>`;
         $msgs.appendChild(c);
         bajar();
         if (typeof window.cargarProductos === 'function') window.cargarProductos();

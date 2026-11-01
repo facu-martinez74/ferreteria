@@ -7,7 +7,7 @@ import { fotoDe } from './fotos.js';
 import { fileURLToPath } from 'node:url';
 import {
   buscarProductos, listarCategorias, crearPedido, ErrorNegocio,
-  listarPedidos, cambiarEstadoPedido, resumenAdmin, actualizarProducto, estadisticas,
+  listarPedidos, cambiarEstadoPedido, seguimientoPedido, resumenAdmin, actualizarProducto, estadisticas,
 } from './db.js';
 import { responder, asistenteDisponible } from './assistant.js';
 import { listarConversaciones } from './conversaciones.js';
@@ -52,6 +52,7 @@ const TIPOS = {
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
+  '.webmanifest': 'application/manifest+json',
   '.ico': 'image/x-icon',
 };
 
@@ -137,6 +138,7 @@ const chatPorDia = crearLimitador(num(process.env.CHAT_MAX_POR_DIA, 200), 24 * 3
 const chatGlobalPorHora = crearLimitador(num(process.env.CHAT_MAX_GLOBAL_HORA, 1200), 3600_000);
 const pedidosPorIp = crearLimitador(num(process.env.PEDIDOS_MAX_10MIN, 8), 10 * 60_000);
 const adminPorMin = crearLimitador(120, 60_000);
+const seguimientoPorIp = crearLimitador(30, 10 * 60_000);
 
 /* ---------- API ---------- */
 async function api(req, res, url) {
@@ -187,6 +189,10 @@ async function api(req, res, url) {
       enviar({ tipo: 'error', status: e.status || 500, error: e instanceof ErrorNegocio ? e.message : 'El asistente tuvo un problema. Probá de nuevo.' });
     }
     return res.end();
+  }
+  if (pathname === '/api/pedidos/seguimiento' && metodo === 'GET') {
+    if (!seguimientoPorIp(ipDe(req))) return json(res, 429, { error: 'Demasiadas consultas. Esperá unos minutos.' });
+    return json(res, 200, seguimientoPedido(url.searchParams.get('n'), url.searchParams.get('t')));
   }
   if (pathname === '/api/pedidos' && metodo === 'POST') {
     if (!pedidosPorIp(ipDe(req))) {

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Seguí tu pedido | Ferretería El Clavo</title>
+  <meta name="theme-color" content="#262b32">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/tienda.css">
+  <link rel="stylesheet" href="/seguimiento.css">
+</head>
+<body>
+<header><div class="wrap bar">
+  <a class="logo" href="/" aria-label="Volver a la tienda">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="9" fill="#f4b400"/><path d="M11 10h18v5h-7v15l-2 5-2-5V15h-7z" fill="#16191d"/></svg>
+    <span><b>El Clavo</b><small>Ferretería</small></span>
+  </a>
+  <a class="volver" href="/">Volver a la tienda</a>
+</div></header>
+
+<main class="seg">
+  <h1>Seguí tu pedido</h1>
+  <p class="sub">Ingresá el número de pedido y los últimos 4 dígitos del teléfono que dejaste.</p>
+  <form id="f" class="caja" autocomplete="off">
+    <label>Número de pedido<input name="n" inputmode="numeric" pattern="[0-9]*" required placeholder="Ej: 15"></label>
+    <label>Últimos 4 dígitos de tu teléfono<input name="t" inputmode="numeric" pattern="[0-9]*" maxlength="12" required placeholder="Ej: 1234"></label>
+    <button class="btn pri" type="submit">Ver estado</button>
+    <p id="err" class="err" hidden></p>
+  </form>
+  <section id="res" class="caja" hidden></section>
+</main>
+
+<script src="/negocio.js"></script>
+<script src="/seguimiento.js"></script>
+</body>
+</html>

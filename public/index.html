@@ -10,6 +10,8 @@
   <meta property="og:description" content="Armá tu pedido desde el celular y retiralo en el local.">
   <meta property="og:locale" content="es_AR">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="stylesheet" href="/tienda.css">
 </head>
 <body>
@@ -109,7 +111,7 @@
 <footer><div class="wrap pie">
   <div><b>Ferretería El Clavo</b><p>Pedidos para retirar en el local.</p></div>
   <ul id="contacto" hidden></ul>
-  <a href="/creditos.html" class="acc-neg">Créditos de las fotos</a> · <a href="/admin" class="acc-neg">Acceso del negocio</a>
+  <a href="/seguimiento.html" class="acc-neg">Seguí tu pedido</a> · <a href="/creditos.html" class="acc-neg">Créditos de las fotos</a> · <a href="/admin" class="acc-neg">Acceso del negocio</a>
 </div></footer>
 
 <div id="velo" class="velo"></div>
@@ -147,6 +149,7 @@
     <div class="check"><svg class="i"><use href="#i-check"/></svg></div>
     <h2>¡Pedido recibido!</h2>
     <p id="exito-texto"></p>
+    <a id="exito-seguir" class="btn dark" href="/seguimiento.html" style="color:var(--ink);border-color:var(--line)">Seguir mi pedido</a>
     <button id="btn-cerrar-exito" class="btn pri" type="button">Seguir mirando</button>
   </div>
 </section>

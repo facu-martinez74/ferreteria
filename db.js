@@ -367,3 +367,23 @@ export function estadisticas(dias = 14) {
   const ticket = db.prepare("SELECT AVG(total) AS t FROM pedidos WHERE estado != 'cancelado'").get().t;
   return { serie, top, origen, conversaciones: conv, ticket_promedio: Math.round(Number(ticket || 0)) };
 }
+
+/* ---------------- Seguimiento para el cliente ---------------- */
+// Se consulta con el numero de pedido + los ultimos 4 digitos del telefono. Solo devuelve el primer nombre.
+export function seguimientoPedido(id, telefono) {
+  id = Number(id);
+  const digitos = String(telefono || '').replace(/\D/g, '');
+  if (!Number.isInteger(id) || id < 1 || digitos.length < 4) {
+    throw new ErrorNegocio('Ingresa el numero de pedido y los ultimos 4 digitos de tu telefono.');
+  }
+  const p = db.prepare('SELECT id, cliente, telefono, total, estado, origen, creado FROM pedidos WHERE id = ?').get(id);
+  const ult4 = (s) => String(s || '').replace(/\D/g, '').slice(-4);
+  if (!p || ult4(p.telefono) !== digitos.slice(-4)) {
+    throw new ErrorNegocio('No encontramos un pedido con esos datos. Revisa el numero y tu telefono.', 404);
+  }
+  const items = db.prepare('SELECT nombre, cantidad, precio FROM pedido_items WHERE pedido_id = ? ORDER BY id').all(id);
+  return {
+    id: p.id, cliente: String(p.cliente).split(' ')[0], total: p.total, estado: p.estado, origen: p.origen, creado: p.creado,
+    items: items.map((i) => ({ nombre: i.nombre, cantidad: i.cantidad, precio: i.precio })),
+  };
+}

@@ -262,6 +262,8 @@ async function enviarPedido(ev) {
     dibujarCarrito();
     f.hidden = true;
     $('#exito-texto').textContent = `Pedido #${pedido.id} por ${fmt.format(pedido.total)}. Lo estamos preparando, ${pedido.cliente}. Te avisamos cuando esté listo para retirar.`;
+    const t4 = String(f.telefono.value || pedido.telefono || '').replace(/\D/g, '').slice(-4);
+    $('#exito-seguir').href = `/seguimiento.html?n=${pedido.id}&t=${t4}`;
     $('#exito').hidden = false;
     f.reset();
     cargarProductos();

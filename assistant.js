@@ -40,7 +40,7 @@ CUANDO EL CLIENTE CUENTA UN TRABAJO (colgar un estante, pintar, arreglar una can
 
 CRITERIO TÉCNICO (aplicalo al armar la lista)
 - Elegí productos que sirvan de verdad para ese trabajo: no uses sellador de silicona (es para juntas de baño o ventanas) en paredes, ni esmalte sintético para paredes interiores.
-- Cantidades razonables: elegí el envase más chico que alcance. No ofrezcas un balde de 20 L para una reparación o una pared; calculá con unos 10 m² por litro por mano (dos manos) y aclaralo como estimación.
+- Cantidades razonables: elegí el envase más chico que alcance. No ofrezcas un balde de 20 L para una reparación o una pared. Para litros de pintura o enduido y para tarugos/escuadras de un estante usá SIEMPRE la herramienta calcular_cantidades (no estimes de memoria) y aclará el supuesto como estimación.
 - Humedad en paredes: primero avisá en una línea que hay que encontrar y arreglar la causa (pérdida de caño, filtración, falta de aislación); si no, vuelve. Después la secuencia: raspar lo flojo (espátula y cepillo de alambre), tratar el moho con antihongos si lo hay, aplicar hidrófugo, fijador, enduido donde haga falta, lijar y pintar con látex antihumedad. Sumá guantes y lentes. Buscá cada paso con buscar_productos ("humedad", "hidrofugo", "antihongos", "fijador", "espatula"). Para el último dato preguntá si es una mancha chica o una pared entera, y si ya se arregló la causa.
 
 CÓMO TOMAR EL PEDIDO
@@ -101,6 +101,26 @@ const HERRAMIENTAS = [
           },
         },
         required: ['items'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'calcular_cantidades',
+      description:
+        'Calcula cantidades aproximadas para un trabajo: litros de pintura o enduido segun los m2, o tarugos/tornillos/escuadras para un estante. Usala en vez de estimar de memoria cuando el cliente da medidas o cuando asumas medidas.',
+      parameters: {
+        type: 'object',
+        properties: {
+          tipo: { type: 'string', enum: ['pintura', 'enduido', 'estante'] },
+          m2: { type: 'number', description: 'Superficie en m2 (pintura o enduido).' },
+          manos: { type: 'integer', description: 'Cantidad de manos (por defecto 2 en pintura, 2 en enduido).' },
+          largo_cm: { type: 'number', description: 'Largo del estante en cm.' },
+          peso_kg: { type: 'number', description: 'Peso aproximado que va a soportar el estante en kg.' },
+        },
+        required: ['tipo'],
         additionalProperties: false,
       },
     },
@@ -293,9 +313,49 @@ function tomarPedido(args, estado) {
   }
 }
 
+
+/* ---------------- Calculadora de cantidades (determinista, no depende del modelo) ---------------- */
+function calcular(args) {
+  const tipo = String(args?.tipo || '');
+  const num = (v, min, max) => (Number.isFinite(Number(v)) && Number(v) >= min && Number(v) <= max ? Number(v) : null);
+  if (tipo === 'pintura' || tipo === 'enduido') {
+    const m2 = num(args.m2, 1, 2000);
+    if (!m2) return { error: 'Necesito los m2 de pared (entre 1 y 2000).' };
+    const manos = num(args.manos, 1, 4) || 2;
+    const rinde = tipo === 'pintura' ? 10 : 5; // m2 por litro por mano (aproximado)
+    const litros = Math.ceil((m2 * manos) / rinde);
+    return {
+      aproximado: true,
+      supuestos: [`${m2} m2`, `${manos} manos`, `rendimiento aprox. ${rinde} m2 por litro por mano`],
+      litros_necesarios: litros,
+      latas_de_4_litros: Math.ceil(litros / 4),
+      baldes_de_20_litros: Math.ceil(litros / 20),
+      consejo: 'Si necesitás 5 latas de 4 L o más, suele convenir el balde de 20 L; revisá los precios con buscar_productos.',
+    };
+  }
+  if (tipo === 'estante') {
+    const largo = num(args.largo_cm, 20, 400);
+    if (!largo) return { error: 'Necesito el largo del estante en cm (entre 20 y 400).' };
+    const peso = num(args.peso_kg, 0, 200) ?? 10;
+    const escuadras = largo <= 80 ? 2 : largo <= 140 ? 3 : Math.ceil(largo / 60) + 1;
+    const porEscuadra = peso > 15 ? 3 : 2; // tarugos por escuadra
+    const tarugos = escuadras * porEscuadra;
+    return {
+      aproximado: true,
+      supuestos: [`largo ${largo} cm`, `carga aprox. ${peso} kg`],
+      escuadras,
+      tarugos_y_tornillos: tarugos + 2, // +2 de repuesto
+      mecha_para_el_tarugo: 'del mismo diametro que el tarugo',
+      consejo: peso > 25 ? 'Con tanta carga conviene escuadras reforzadas y consultar a un profesional.' : 'Marcá con el nivel antes de perforar.',
+    };
+  }
+  return { error: 'Tipo de calculo no soportado.' };
+}
+
 function ejecutar(nombre, args, estado) {
   try {
     if (nombre === 'buscar_productos') return buscar(args);
+    if (nombre === 'calcular_cantidades') return calcular(args);
     if (nombre === 'verificar_stock') {
       const r = verificar(args);
       // Respaldo: si el modelo no llama a mostrar_lista, usamos lo último que verificó.
@@ -389,6 +449,7 @@ function limpiarHistorial(mensajes) {
 const TEXTO_HERRAMIENTA = {
   buscar_productos: (a) => (a?.consulta ? `Buscando “${String(a.consulta).slice(0, 40)}” en el catálogo…` : 'Buscando en el catálogo…'),
   verificar_stock: () => 'Verificando stock y precios…',
+  calcular_cantidades: () => 'Calculando cantidades…',
   mostrar_lista: () => 'Armando tu lista…',
   crear_pedido: () => 'Registrando tu pedido…',
 };
