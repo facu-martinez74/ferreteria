@@ -38,7 +38,7 @@ async function cargarCategorias() {
   const chips = $('#chips');
   chips.innerHTML =
     `<button class="chip activo" data-cat="">Todo</button>` +
-    cats.map((c) => `<button class="chip" data-cat="${esc(c.categoria)}">${ICONOS[c.categoria] || '📦'} ${esc(c.categoria)}</button>`).join('');
+    cats.map((c) => `<button class="chip" data-cat="${esc(c.categoria)}"><span class="chip-ic">${window.iconos.categoria(c.categoria, 16)}</span>${esc(c.categoria)}</button>`).join('');
 }
 
 async function cargarProductos() {
@@ -71,7 +71,7 @@ function dibujarGrilla() {
   const ordenados = [...productos].sort((x, y) => (y.stock > 0) - (x.stock > 0));
   $('#grilla').innerHTML = ordenados.map((p) => `
     <article class="tarjeta ${p.stock <= 0 ? 'agotado' : ''}">
-      <div class="icono">${ICONOS[p.categoria] || '📦'}</div>
+      <div class="icono">${window.iconos.producto(p, 44)}</div>
       <div class="marca">${esc(p.marca)}</div>
       <h3>${esc(p.nombre)}</h3>
       <p class="desc">${esc(p.descripcion)}</p>

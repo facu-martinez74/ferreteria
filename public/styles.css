@@ -34,7 +34,7 @@ body { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 
 .grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; padding-bottom: 60px; }
 .tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
-.tarjeta .icono { font-size: 2.2rem; background: #fef9c3; border-radius: 10px; height: 74px; display: grid; place-items: center; }
+.tarjeta .icono { color: #92400e; background: #fef9c3; border-radius: 10px; height: 74px; display: grid; place-items: center; }
 .tarjeta .marca { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--gris); margin-top: 4px; }
 .tarjeta h3 { margin: 0; font-size: 1rem; line-height: 1.25; }
 .tarjeta .desc { margin: 0; color: var(--gris); font-size: .85rem; flex: 1; }
@@ -94,3 +94,7 @@ input, textarea { width: 100%; margin-top: 5px; padding: 11px 12px; border: 1px 
 .ia-sugs button.otro { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4); }
 @media (max-width: 520px) { .btn-carrito span:nth-child(2) { display: none; } }
 :focus-visible { outline: 3px solid var(--amarillo-osc); outline-offset: 2px; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; }
+.chip-ic { display: inline-flex; }
+.chip-ic svg { display: block; }
