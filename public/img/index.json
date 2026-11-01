@@ -69,26 +69,12 @@
     "licencia": "CC BY-SA 3.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:Grinder_diamond_blade.jpg"
   },
-  "latex": {
-    "archivo": "latex.jpg",
-    "titulo": "File:Used paint cans after renovation of a small company building in Shibuya-ku.jpg",
-    "autor": "Syced",
-    "licencia": "CC0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Used_paint_cans_after_renovation_of_a_small_company_building_in_Shibuya-ku.jpg"
-  },
   "rodillo": {
     "archivo": "rodillo.jpg",
     "titulo": "File:Paint-roller (23956075297).jpg",
     "autor": "r. nial bradshaw",
     "licencia": "CC BY 2.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:Paint-roller_(23956075297).jpg"
-  },
-  "pincel": {
-    "archivo": "pincel.jpg",
-    "titulo": "File:Paintbrush closeup.jpg",
-    "autor": "Rhododendrites",
-    "licencia": "CC BY-SA 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Paintbrush_closeup.jpg"
   },
   "cinta-enmascarar": {
     "archivo": "cinta-enmascarar.jpg",
@@ -104,40 +90,12 @@
     "licencia": "Public domain",
     "pagina": "https://commons.wikimedia.org/wiki/File:Sandpaper_closeup.jpg"
   },
-  "cable": {
-    "archivo": "cable.jpg",
-    "titulo": "File:Electrical instruments and telephones of the U.S. Signal corps (1911) (14753403741).jpg",
-    "autor": "Internet Archive Book Images",
-    "licencia": "No restrictions",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Electrical_instruments_and_telephones_of_the_U.S._Signal_corps_(1911)_(14753403741).jpg"
-  },
-  "tomacorriente": {
-    "archivo": "tomacorriente.jpg",
-    "titulo": "File:Electrical Outlet.jpg",
-    "autor": "Texas Lane",
-    "licencia": "CC BY-SA 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Electrical_Outlet.jpg"
-  },
-  "termica": {
-    "archivo": "termica.png",
-    "titulo": "File:Miniature circuit breaker.png",
-    "autor": "Entekelec",
-    "licencia": "CC BY-SA 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Miniature_circuit_breaker.png"
-  },
   "cinta-aisladora": {
     "archivo": "cinta-aisladora.jpg",
     "titulo": "File:Electrical-tape black.jpg",
     "autor": "Jonas Bergsten",
     "licencia": "Public domain",
     "pagina": "https://commons.wikimedia.org/wiki/File:Electrical-tape_black.jpg"
-  },
-  "lampara": {
-    "archivo": "lampara.png",
-    "titulo": "File:Led light bulb - led lamp 2.png",
-    "autor": "Tommaso.sansone91",
-    "licencia": "CC0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Led_light_bulb_-_led_lamp_2.png"
   },
   "alargue": {
     "archivo": "alargue.jpg",
@@ -153,33 +111,12 @@
     "licencia": "CC BY-SA 3.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:PTFE_tape02.jpg"
   },
-  "canilla": {
-    "archivo": "canilla.jpg",
-    "titulo": "File:Water faucet 2.jpg",
-    "autor": "Yasmine.shal",
-    "licencia": "CC BY-SA 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Water_faucet_2.jpg"
-  },
   "cano-pvc": {
     "archivo": "cano-pvc.jpg",
     "titulo": "File:1 inch PVC Valve and pipe-IMG 1061.jpg",
     "autor": "Bijay Chaurasia",
     "licencia": "CC BY-SA 4.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:1_inch_PVC_Valve_and_pipe-IMG_1061.jpg"
-  },
-  "tornillos": {
-    "archivo": "tornillos.jpg",
-    "titulo": "File:Screws EXP 054.JPG",
-    "autor": "Tomasz Sienicki [user: tsca, mail: tomasz.sienicki at gmail.com]",
-    "licencia": "CC BY 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Screws_EXP_054.JPG"
-  },
-  "clavos": {
-    "archivo": "clavos.jpg",
-    "titulo": "File:Nails Band.JPG",
-    "autor": "Gripweed",
-    "licencia": "CC BY-SA 3.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Nails_Band.JPG"
   },
   "adhesivo": {
     "archivo": "adhesivo.jpg",
@@ -188,13 +125,6 @@
     "licencia": "CC BY-SA 3.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:2-part_epoxy_adhesive_in_cartridge.jpg"
   },
-  "guantes": {
-    "archivo": "guantes.jpg",
-    "titulo": "File:Lalan Work Gloves.jpg",
-    "autor": "Balachandra.gayan",
-    "licencia": "CC BY-SA 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Lalan_Work_Gloves.jpg"
-  },
   "lentes": {
     "archivo": "lentes.jpg",
     "titulo": "File:Safety Eyewear.jpg",
@@ -202,33 +132,12 @@
     "licencia": "CC BY-SA 4.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:Safety_Eyewear.jpg"
   },
-  "casco": {
-    "archivo": "casco.jpg",
-    "titulo": "File:HardHat.jpg",
-    "autor": "DaSovietPotato",
-    "licencia": "CC0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:HardHat.jpg"
-  },
   "manguera": {
     "archivo": "manguera.jpg",
     "titulo": "File:Melnor Garden Hose Water Nozzle 5 LR.jpg",
     "autor": "PumpkinSky",
     "licencia": "CC BY-SA 4.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:Melnor_Garden_Hose_Water_Nozzle_5_LR.jpg"
-  },
-  "pala": {
-    "archivo": "pala.jpg",
-    "titulo": "File:Shovel-Cyclone-BD-2015-2.JPG",
-    "autor": "Thierry Caro",
-    "licencia": "CC BY-SA 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Shovel-Cyclone-BD-2015-2.JPG"
-  },
-  "tijera-podar": {
-    "archivo": "tijera-podar.jpg",
-    "titulo": "File:Pruning shears removableblade.JPG",
-    "autor": "KVDP",
-    "licencia": "Public domain",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Pruning_shears_removableblade.JPG"
   },
   "llaves-combinadas": {
     "archivo": "llaves-combinadas.jpg",
