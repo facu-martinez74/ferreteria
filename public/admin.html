@@ -37,6 +37,7 @@
     <nav class="tabs">
       <button class="tab activo" data-tab="pedidos">Pedidos <span id="badge-nuevos" class="badge-tab" hidden></span></button>
       <button class="tab" data-tab="inventario">Inventario <span id="badge-stock" class="badge-tab alerta" hidden></span></button>
+      <button class="tab" data-tab="conversaciones">Conversaciones IA</button>
     </nav>
 
     <section id="tab-pedidos">
@@ -57,6 +58,14 @@
           <tbody id="cuerpo-inv"></tbody>
         </table>
       </div>
+    </section>
+
+    <section id="tab-conversaciones" hidden>
+      <div class="barra-conv">
+        <p class="sub">Lo que los clientes consultaron al asistente y qué pedido salió de cada charla.</p>
+        <button id="btn-actualizar-conv" class="btn chico">Actualizar</button>
+      </div>
+      <div id="lista-conv" class="convs"></div>
     </section>
   </main>
 

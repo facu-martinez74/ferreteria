@@ -8,6 +8,8 @@ import {
   buscarProductos, listarCategorias, crearPedido, ErrorNegocio,
   listarPedidos, cambiarEstadoPedido, resumenAdmin, actualizarProducto,
 } from './db.js';
+import { responder, asistenteDisponible } from './assistant.js';
+import { listarConversaciones } from './conversaciones.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');
@@ -95,8 +97,31 @@ function esAdmin(req) {
 
 const intentos = new Map(); // ip -> { n, hasta }
 function ipDe(req) {
-  return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  // nginx agrega la IP real al final de x-forwarded-for; la primera la puede inventar el cliente.
+  const partes = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',');
+  return partes[partes.length - 1].trim();
 }
+
+// Limite del chat: protege la API key compartida de abusos.
+const chatHits = new Map(); // ip -> [timestamps]
+const CHAT_MAX_POR_MIN = 30;
+function chatPermitido(ip) {
+  const ahora = Date.now();
+  const recientes = (chatHits.get(ip) || []).filter((t) => ahora - t < 60_000);
+  if (recientes.length >= CHAT_MAX_POR_MIN) {
+    chatHits.set(ip, recientes);
+    return false;
+  }
+  recientes.push(ahora);
+  chatHits.set(ip, recientes);
+  return true;
+}
+setInterval(() => {
+  const ahora = Date.now();
+  for (const [ip, ts] of chatHits) {
+    if (!ts.some((t) => ahora - t < 60_000)) chatHits.delete(ip);
+  }
+}, 5 * 60_000).unref();
 
 /* ---------- API ---------- */
 async function api(req, res, url) {
@@ -115,6 +140,17 @@ async function api(req, res, url) {
       categoria: url.searchParams.get('categoria') || '',
     });
     return json(res, 200, productos);
+  }
+  if (pathname === '/api/chat/estado' && metodo === 'GET') {
+    return json(res, 200, { disponible: asistenteDisponible() });
+  }
+  if (pathname === '/api/chat' && metodo === 'POST') {
+    if (!chatPermitido(ipDe(req))) {
+      return json(res, 429, { error: 'Estás escribiendo muy rápido. Esperá unos segundos y probá de nuevo.' });
+    }
+    const cuerpo = await leerJSON(req, 40_000);
+    const resultado = await responder({ mensajes: cuerpo.mensajes, sessionId: cuerpo.sessionId });
+    return json(res, 200, resultado);
   }
   if (pathname === '/api/pedidos' && metodo === 'POST') {
     const cuerpo = await leerJSON(req);
@@ -144,6 +180,9 @@ async function api(req, res, url) {
 
     if (pathname === '/api/admin/resumen' && metodo === 'GET') {
       return json(res, 200, resumenAdmin());
+    }
+    if (pathname === '/api/admin/conversaciones' && metodo === 'GET') {
+      return json(res, 200, listarConversaciones(100));
     }
     if (pathname === '/api/admin/pedidos' && metodo === 'GET') {
       return json(res, 200, listarPedidos({ estado: url.searchParams.get('estado') || '' }));

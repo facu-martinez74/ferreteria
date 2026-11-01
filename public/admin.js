@@ -21,6 +21,9 @@ let pedidos = [];
 let ultimoIdVisto = null;
 let temporizador = null;
 let tabActual = 'pedidos';
+let conversaciones = [];
+let firmaConv = '';
+const convAbiertas = new Set();
 
 function leerToken() { try { return localStorage.getItem('adminToken') || ''; } catch { return ''; } }
 function guardarToken(t) { try { t ? localStorage.setItem('adminToken', t) : localStorage.removeItem('adminToken'); } catch {} }
@@ -272,6 +275,55 @@ $('#buscar-inv').addEventListener('input', () => {
 });
 $('#solo-bajo').addEventListener('change', () => cargarInventario().catch((e) => aviso(e.message)));
 
+/* ---------- Conversaciones con el asistente ---------- */
+const HERRAMIENTA = {
+  buscar_productos: '🔎 Buscó en el catálogo',
+  verificar_stock: '📦 Verificó stock',
+  crear_pedido: '🧾 Creó el pedido',
+};
+
+function dibujarConversaciones() {
+  const cont = $('#lista-conv');
+  if (!conversaciones.length) {
+    cont.innerHTML = `<div class="sin-datos">Todavía no hay conversaciones con el asistente.</div>`;
+    return;
+  }
+  cont.innerHTML = conversaciones.map((c) => {
+    const herr = [...new Set(c.mensajes.flatMap((m) => m.herramientas || []))];
+    return `
+    <details class="conv" data-conv="${esc(c.id)}" ${convAbiertas.has(c.id) ? 'open' : ''}>
+      <summary>
+        <div class="conv-tit">“${esc(c.resumen)}”</div>
+        <div class="conv-meta">
+          ${hace(c.actualizado)} · ${c.cantidad_mensajes} mensajes
+          ${c.pedido_id ? `<span class="pill listo">Pedido #${c.pedido_id}</span>` : `<span class="pill entregado">Sin pedido</span>`}
+        </div>
+      </summary>
+      <div class="conv-chat">
+        ${c.mensajes.map((m) => `<div class="cm ${m.role === 'user' ? 'cli' : 'bot'}">${esc(m.content).replace(/\*\*/g, '').replace(/\n/g, '<br>')}</div>`).join('')}
+        ${herr.length ? `<div class="conv-herr">${herr.map((h) => `<span class="pill herr">${HERRAMIENTA[h] || esc(h)}</span>`).join(' ')}</div>` : ''}
+      </div>
+    </details>`;
+  }).join('');
+}
+
+async function cargarConversaciones(silencioso = false) {
+  const datos = await api('/api/admin/conversaciones');
+  const firma = datos.map((c) => c.id + c.actualizado).join('|');
+  if (silencioso && firma === firmaConv) return;
+  firmaConv = firma;
+  conversaciones = datos;
+  dibujarConversaciones();
+}
+
+$('#lista-conv').addEventListener('toggle', (ev) => {
+  const d = ev.target.closest('details[data-conv]');
+  if (!d) return;
+  if (d.open) convAbiertas.add(d.dataset.conv); else convAbiertas.delete(d.dataset.conv);
+}, true);
+
+$('#btn-actualizar-conv').addEventListener('click', () => cargarConversaciones().catch((e) => aviso(e.message)));
+
 /* ---------- Pestañas y refresco ---------- */
 document.querySelector('.tabs').addEventListener('click', async (ev) => {
   const b = ev.target.closest('[data-tab]');
@@ -280,8 +332,10 @@ document.querySelector('.tabs').addEventListener('click', async (ev) => {
   document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('activo', t === b));
   $('#tab-pedidos').hidden = tabActual !== 'pedidos';
   $('#tab-inventario').hidden = tabActual !== 'inventario';
+  $('#tab-conversaciones').hidden = tabActual !== 'conversaciones';
   try {
     if (tabActual === 'inventario') await cargarInventario();
+    else if (tabActual === 'conversaciones') await cargarConversaciones();
     else await cargarPedidos();
   } catch (e) { aviso(e.message); }
 });
@@ -302,6 +356,7 @@ async function refrescarPeriodico() {
   try {
     await Promise.all([cargarResumen(), cargarPedidos()]);
     await detectarNuevos();
+    if (tabActual === 'conversaciones') await cargarConversaciones(true);
   } catch { /* si falla una vez, se reintenta en el próximo ciclo */ }
 }
 
