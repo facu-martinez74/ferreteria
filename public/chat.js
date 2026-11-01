@@ -281,9 +281,11 @@
     $msgs.appendChild(aviso);
     bajar();
     try {
+      let token = '';
+      try { token = (JSON.parse(localStorage.getItem('clavo_sesion') || 'null') || {}).token || ''; } catch { /* sin sesión */ }
       const r = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
         body: JSON.stringify({
           sessionId,
           mensajes: historial.slice(-20).map((m) => (m.lista ? { role: m.role, content: m.content, lista: m.lista.map((l) => ({ id: l.id, cantidad: l.cantidad, grupo: l.grupo })) } : { role: m.role, content: m.content })),

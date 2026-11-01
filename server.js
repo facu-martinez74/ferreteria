@@ -215,6 +215,7 @@ async function api(req, res, url) {
       const r = await responder({
         mensajes: cuerpo.mensajes,
         sessionId: cuerpo.sessionId,
+        cliente: clienteDe(req),
         onEstado: (texto) => enviar({ tipo: 'estado', texto }),
       });
       enviar({ tipo: 'fin', ...r });
