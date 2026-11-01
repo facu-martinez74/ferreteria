@@ -143,6 +143,29 @@ function sembrar() {
 }
 sembrar();
 
+// Productos agregados despues de la primera version del catalogo. Se insertan solos si faltan
+// (no tocan stock ni pedidos de los productos que ya existen).
+const SEMILLA_EXTRA = [
+  ['Espatula flexible 10 cm', 'Pintureria', 'Atlas', 5400, 30, 8, 'unidad', 'Espatula de acero flexible con mango, para raspar y aplicar enduido.', 'reparar paredes, aplicar enduido, raspar pintura, humedad, descascarado'],
+  ['Cepillo de alambre', 'Herramientas manuales', 'Bremen', 4200, 25, 6, 'unidad', 'Cepillo de alambre de acero con mango de madera.', 'raspar pintura descascarada, limpiar oxido, salitre, humedad, preparar paredes'],
+  ['Antihongos concentrado 1 L', 'Pintureria', 'Alba', 6800, 20, 5, 'botella', 'Elimina moho y hongos de las paredes antes de pintar.', 'moho, hongos, manchas negras, humedad, bano, cocina'],
+  ['Hidrofugo para paredes 4 L', 'Pintureria', 'Sika', 16900, 14, 4, 'lata', 'Liquido hidrofugo que frena el paso de la humedad en muros interiores y exteriores.', 'humedad en paredes, humedad ascendente, manchas de humedad, salitre, impermeabilizar'],
+  ['Fijador sellador al agua 4 L', 'Pintureria', 'Sinteplast', 13200, 16, 4, 'lata', 'Fijador para preparar paredes antes de pintar: mejora la adherencia y uniforma la absorcion.', 'preparar paredes, antes de pintar, paredes descascaradas, humedad, sellar'],
+  ['Latex antihumedad interior 4 L', 'Pintureria', 'Alba', 38500, 12, 3, 'lata', 'Pintura latex con fungicida para paredes interiores con humedad y moho. Rinde unos 40 m2 por mano.', 'humedad, moho, manchas de humedad, pintar bano, pintar cocina, paredes humedas'],
+];
+
+function completarCatalogo() {
+  const existe = db.prepare('SELECT 1 FROM productos WHERE nombre = ?');
+  const ins = db.prepare(`INSERT INTO productos
+    (nombre, categoria, marca, precio, stock, stock_minimo, unidad, descripcion, usos, busqueda)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  for (const [nombre, categoria, marca, precio, stock, minimo, unidad, descripcion, usos] of SEMILLA_EXTRA) {
+    if (existe.get(nombre)) continue;
+    ins.run(nombre, categoria, marca, precio, stock, minimo, unidad, descripcion, usos, normalizar([nombre, categoria, marca, descripcion, usos].join(' ')));
+  }
+}
+completarCatalogo();
+
 const CAMPOS = 'id, nombre, categoria, marca, descripcion, usos, precio, stock, stock_minimo, unidad';
 
 export function buscarProductos({ q = '', categoria = '', soloConStock = false, limite = 200 } = {}) {
