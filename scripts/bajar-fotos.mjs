@@ -5,17 +5,18 @@
      node scripts/bajar-fotos.mjs --solo=martillo,pala -> solo esas
      node scripts/bajar-fotos.mjs martillo="File:Nombre exacto.jpg"  -> forzar una foto concreta de Commons
    Después mirá la tienda: si una foto no te gusta, forzá otra con la última forma. */
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { TIPOS, DIR_IMG } from '../fotos.js';
 
 const API = process.env.COMMONS_API || 'https://commons.wikimedia.org/w/api.php';
 const UA = 'ElClavoHackathon/1.0 (ferreteria demo; github.com/facu-martinez74/ferreteria)';
-const MAL_TITULO = /logo|diagram|icon|drawing|patent|poster|map\b|stamp|screenshot|flag|coat of arms|svg|sketch|illustration|catalog|advert|museum|exhibit/i;
+const MAL_TITULO = /logo|diagram|icon|drawing|patent|poster|map\b|stamp|screenshot|flag|coat of arms|svg|sketch|illustration|catalog|advert|museum|exhibit|nara\b|industries of war|truck|saint |painting|church|court|statue|portrait|cathedral|battle|soldier|factory|worker|vintage|antique/i;
 
 const args = process.argv.slice(2);
 const todas = args.includes('--todas');
 const solo = (args.find((a) => a.startsWith('--solo=')) || '').slice(7).split(',').filter(Boolean);
+const verCandidatos = (args.find((a) => a.startsWith('--candidatos=')) || '').slice(13);
 const forzados = Object.fromEntries(args.filter((a) => /^[a-z-]+=File:/i.test(a)).map((a) => [a.split('=')[0], a.slice(a.indexOf('=') + 1)]));
 
 mkdirSync(DIR_IMG, { recursive: true });
@@ -27,17 +28,24 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 const sinHtml = (s) => String(s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 
 async function pedir(url, esJson = true) {
-  for (let i = 0; i < 4; i++) {
+  let ultimo = 'sin respuesta';
+  for (let i = 0; i < 7; i++) {
     try {
       const r = await fetch(url, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(25_000) });
-      if (r.status === 429 || r.status >= 500) { await dormir(1500 * (i + 1)); continue; }
+      if (r.status === 429 || r.status >= 500) {
+        ultimo = 'HTTP ' + r.status + ' (Wikimedia pide ir más despacio)';
+        const ra = Number(r.headers.get('retry-after'));
+        await dormir(Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : 2500 * (i + 1), 20_000));
+        continue;
+      }
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return esJson ? await r.json() : Buffer.from(await r.arrayBuffer());
     } catch (e) {
-      if (i === 3) throw e;
+      ultimo = e.message;
       await dormir(1000 * (i + 1));
     }
   }
+  throw new Error(ultimo + ' — probá de nuevo en un minuto');
 }
 
 const INFO = 'imageinfo&iiprop=url|mime|size|extmetadata&iiurlwidth=520';
@@ -67,6 +75,7 @@ async function buscar(q) {
     .map(aCandidato)
     .filter((c) => c && c.ancho >= 400 && !MAL_TITULO.test(c.titulo))
     .map((c) => ({ ...c, puntos: palabras.filter((w) => c.titulo.toLowerCase().includes(w)).length }))
+    .filter((c) => c.puntos >= 1) // el título tiene que mencionar lo que buscamos
     .sort((a, b) => b.puntos - a.puntos);
 }
 
@@ -78,8 +87,19 @@ async function porTitulo(titulo) {
   return [c];
 }
 
+if (verCandidatos) {
+  const t = TIPOS.find((x) => x.slug === verCandidatos && x.q);
+  if (!t) { console.log('Tipo desconocido. Opciones:', TIPOS.filter((x) => x.q).map((x) => x.slug).join(', ')); process.exit(1); }
+  const lista = await buscar(t.q);
+  console.log(`Candidatos para "${t.slug}" (búsqueda: ${t.q}):`);
+  lista.slice(0, 8).forEach((c, i) => console.log(`${i + 1}. ${c.titulo}  (${c.licencia})`));
+  console.log(`\nPara usar uno:  node scripts/bajar-fotos.mjs ${t.slug}="File:Nombre.jpg"   (copiá el título exacto, con comillas)`);
+  process.exit(0);
+}
+
 let ok = 0, falta = 0;
 for (const t of TIPOS) {
+  if (t.como) continue; // reutiliza la foto de otro tipo
   if (solo.length && !solo.includes(t.slug)) continue;
   if (!todas && !forzados[t.slug] && indice[t.slug] && existsSync(path.join(DIR_IMG, indice[t.slug].archivo))) { ok++; continue; }
   try {
@@ -97,8 +117,17 @@ for (const t of TIPOS) {
     console.log(`✗ ${t.slug.padEnd(18)} ${e.message}  -> se muestra el ícono`);
     falta++;
   }
-  await dormir(350); // cortesía con Wikimedia
+  await dormir(800); // cortesía con Wikimedia (si no, responde 429)
 }
+
+// Limpieza: fotos de tipos que ya no se buscan (ahora reutilizan otra) salen del índice y de la carpeta.
+for (const slug of Object.keys(indice)) {
+  if (TIPOS.some((t) => t.slug === slug && t.q)) continue;
+  try { unlinkSync(path.join(DIR_IMG, indice[slug].archivo)); } catch { /* ya no estaba */ }
+  delete indice[slug];
+  console.log(`🧹 ${slug}: foto descartada (reutiliza otra)`);
+}
+writeFileSync(rutaIndice, JSON.stringify(indice, null, 2));
 
 // Página de créditos (algunas licencias piden atribución).
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

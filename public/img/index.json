@@ -76,13 +76,6 @@
     "licencia": "CC0",
     "pagina": "https://commons.wikimedia.org/wiki/File:Used_paint_cans_after_renovation_of_a_small_company_building_in_Shibuya-ku.jpg"
   },
-  "esmalte": {
-    "archivo": "esmalte.jpg",
-    "titulo": "File:Saint Catherine by Léonard II Limosin, enamel and gold paint on copper.jpg",
-    "autor": "Hiart",
-    "licencia": "CC0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Saint_Catherine_by_L%C3%A9onard_II_Limosin,_enamel_and_gold_paint_on_copper.jpg"
-  },
   "rodillo": {
     "archivo": "rodillo.jpg",
     "titulo": "File:Paint-roller (23956075297).jpg",
@@ -113,10 +106,10 @@
   },
   "cable": {
     "archivo": "cable.jpg",
-    "titulo": "File:Industries of War - Electrical Apparatus - General - MANUFACTURING WIRE AND STEEL PRODUCTS FOR GOVERNMENT. Barb fence Machines and Spools of finished wire ready for shipment in plant of Jones & Laughlin Steel Co.(...) - NARA - 31488049.jpg",
-    "autor": "Unknown authorUnknown author or not provided",
-    "licencia": "Public domain",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Industries_of_War_-_Electrical_Apparatus_-_General_-_MANUFACTURING_WIRE_AND_STEEL_PRODUCTS_FOR_GOVERNMENT._Barb_fence_Machines_and_Spools_of_finished_wire_ready_for_shipment_in_plant_of_Jones_%26_Laughlin_Steel_Co.(...)_-_NARA_-_31488049.jpg"
+    "titulo": "File:Electrical instruments and telephones of the U.S. Signal corps (1911) (14753403741).jpg",
+    "autor": "Internet Archive Book Images",
+    "licencia": "No restrictions",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Electrical_instruments_and_telephones_of_the_U.S._Signal_corps_(1911)_(14753403741).jpg"
   },
   "tomacorriente": {
     "archivo": "tomacorriente.jpg",
@@ -246,10 +239,10 @@
   },
   "taladro": {
     "archivo": "taladro.jpg",
-    "titulo": "File:Vintage Power Tool - Black & Decker P80-38 Rotary Hammer Drill - 5010834599.jpg",
-    "autor": "toolstop",
+    "titulo": "File:Black & Decker P80-38 Rotary Hammer Drill.jpg",
+    "autor": "Mark Hunter",
     "licencia": "CC BY 2.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Vintage_Power_Tool_-_Black_%26_Decker_P80-38_Rotary_Hammer_Drill_-_5010834599.jpg"
+    "pagina": "https://commons.wikimedia.org/wiki/File:Black_%26_Decker_P80-38_Rotary_Hammer_Drill.jpg"
   },
   "amoladora": {
     "archivo": "amoladora.jpg",
@@ -264,13 +257,6 @@
     "autor": "Matti Blume",
     "licencia": "CC BY-SA 4.0",
     "pagina": "https://commons.wikimedia.org/wiki/File:Panasonic_Cordless_Drill_%26_Driver_EY1DD2,_Ottobrunn_(20250410-P1046293).jpg"
-  },
-  "enduido": {
-    "archivo": "enduido.jpg",
-    "titulo": "File:New Demonstration Electric Hybrid Bucket Truck (14612032547).jpg",
-    "autor": "NAVFAC",
-    "licencia": "Public domain",
-    "pagina": "https://commons.wikimedia.org/wiki/File:New_Demonstration_Electric_Hybrid_Bucket_Truck_(14612032547).jpg"
   },
   "aguarras": {
     "archivo": "aguarras.jpg",
@@ -288,9 +274,16 @@
   },
   "tarugos": {
     "archivo": "tarugos.jpg",
-    "titulo": "File:Feldkirch-Landesgericht (Court)-wodden wall plug-01ASD.jpg",
-    "autor": "Asurnipal",
-    "licencia": "CC BY-SA 4.0",
-    "pagina": "https://commons.wikimedia.org/wiki/File:Feldkirch-Landesgericht_(Court)-wodden_wall_plug-01ASD.jpg"
+    "titulo": "File:Tasselli wall plug.jpg",
+    "autor": "Alessio Sbarbaro",
+    "licencia": "CC BY-SA 2.5",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Tasselli_wall_plug.jpg"
+  },
+  "destornillador": {
+    "archivo": "destornillador.png",
+    "titulo": "File:Black screwdriver.png",
+    "autor": "多多123",
+    "licencia": "CC BY 4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Black_screwdriver.png"
   }
 }

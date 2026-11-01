@@ -26,14 +26,14 @@ export const TIPOS = [
   { slug: 'mecha', re: /mecha/, q: 'drill bit' },
   { slug: 'disco-corte', re: /disco/, q: 'cutting disc grinder' },
   { slug: 'latex', re: /latex/, q: 'paint can' },
-  { slug: 'esmalte', re: /esmalte/, q: 'enamel paint can' },
+  { slug: 'esmalte', re: /esmalte/, como: 'latex' }, // usa la misma foto que el látex (lata de pintura)
   { slug: 'rodillo', re: /rodillo/, q: 'paint roller' },
   { slug: 'pincel', re: /pincel/, q: 'paintbrush' },
   { slug: 'cinta-enmascarar', re: /enmascarar/, q: 'masking tape roll' },
   { slug: 'lija', re: /lija/, q: 'sandpaper' },
-  { slug: 'enduido', re: /enduido/, q: 'joint compound bucket' },
+  { slug: 'enduido', re: /enduido/, como: 'latex' },
   { slug: 'aguarras', re: /aguarras/, q: 'turpentine bottle' },
-  { slug: 'cable', re: /cable unipolar/, q: 'electrical wire spool' },
+  { slug: 'cable', re: /cable unipolar/, q: 'coil of electrical cable copper' },
   { slug: 'tomacorriente', re: /tomacorriente/, q: 'electrical outlet socket' },
   { slug: 'termica', re: /termica/, q: 'miniature circuit breaker' },
   { slug: 'cinta-aisladora', re: /aisladora/, q: 'electrical tape' },
@@ -59,7 +59,8 @@ const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-
 
 export function slugDe(nombre) {
   const n = norm(nombre);
-  return TIPOS.find((t) => t.re.test(n))?.slug || null;
+  const t = TIPOS.find((x) => x.re.test(n));
+  return t ? t.como || t.slug : null; // 'como' = reutiliza la foto de otro tipo
 }
 
 let cache = { mtime: 0, mapa: {} };
